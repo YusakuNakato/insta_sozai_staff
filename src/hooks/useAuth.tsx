@@ -14,6 +14,12 @@ interface AuthContextType {
     workingHoursStart?: string;
     workingHoursEnd?: string;
   }) => Promise<void>;
+  signUpAsAdmin: (email: string, password: string, name: string, additionalInfo?: {
+    actualJobTitle?: string;
+    dailyAvailableHours?: number;
+    workingHoursStart?: string;
+    workingHoursEnd?: string;
+  }) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -83,6 +89,31 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const signUpAsAdmin = async (
+    email: string,
+    password: string,
+    name: string,
+    additionalInfo?: {
+      actualJobTitle?: string;
+      dailyAvailableHours?: number;
+      workingHoursStart?: string;
+      workingHoursEnd?: string;
+    }
+  ) => {
+    try {
+      const { user: userData, firebaseUser: fbUser } = await authService.signUpAsAdmin(
+        email,
+        password,
+        name,
+        additionalInfo
+      );
+      setUser(userData);
+      setFirebaseUser(fbUser);
+    } catch (error) {
+      throw error;
+    }
+  };
+
   const signOut = async () => {
     try {
       await authService.signOut();
@@ -94,7 +125,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <AuthContext.Provider value={{ user, firebaseUser, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, firebaseUser, loading, signIn, signUp, signUpAsAdmin, signOut }}>
       {children}
     </AuthContext.Provider>
   );

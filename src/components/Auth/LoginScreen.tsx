@@ -23,8 +23,10 @@ export const LoginScreen: React.FC = () => {
   const [workingHoursEnd, setWorkingHoursEnd] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [devMode, setDevMode] = useState(false);
+  const [pressCount, setPressCount] = useState(0);
 
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, signUpAsAdmin } = useAuth();
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -62,12 +64,31 @@ export const LoginScreen: React.FC = () => {
         workingHoursEnd: workingHoursEnd || undefined,
       };
 
-      await signUp(email, password, name, additionalInfo);
-      Alert.alert('登録完了', 'アカウントが作成されました');
+      // 開発者モードの場合は管理者として登録
+      if (devMode) {
+        await signUpAsAdmin(email, password, name, additionalInfo);
+        Alert.alert('登録完了', '管理者アカウントが作成されました');
+      } else {
+        await signUp(email, password, name, additionalInfo);
+        Alert.alert('登録完了', 'アカウントが作成されました');
+      }
     } catch (error: any) {
       Alert.alert('登録失敗', error.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleTitlePress = () => {
+    setPressCount(prev => prev + 1);
+
+    if (pressCount >= 4) {
+      setDevMode(prev => !prev);
+      Alert.alert(
+        devMode ? '通常モード' : '開発者モード',
+        devMode ? '通常モードに切り替えました' : '開発者モードが有効になりました。管理者として登録できます。'
+      );
+      setPressCount(0);
     }
   };
 
@@ -78,12 +99,22 @@ export const LoginScreen: React.FC = () => {
     >
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.formContainer}>
-          <Text style={styles.title}>StaffWorkTracker</Text>
+          <TouchableOpacity onPress={handleTitlePress} activeOpacity={0.7}>
+            <Text style={styles.title}>StaffWorkTracker</Text>
+          </TouchableOpacity>
           <Text style={styles.subtitle}>
             {isSignUp ? '新規アカウント登録' : 'ログイン'}
           </Text>
 
-          {isSignUp && (
+          {devMode && (
+            <View style={styles.devModeNotice}>
+              <Text style={styles.devModeNoticeText}>
+                🔧 開発者モード：管理者として登録できます
+              </Text>
+            </View>
+          )}
+
+          {isSignUp && !devMode && (
             <View style={styles.inviteNotice}>
               <Text style={styles.inviteNoticeText}>
                 ※ 招待されたメールアドレスでのみ登録できます
@@ -242,6 +273,20 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#856404',
     textAlign: 'center',
+  },
+  devModeNotice: {
+    backgroundColor: '#E0F2FE',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#7DD3FC',
+  },
+  devModeNoticeText: {
+    fontSize: 13,
+    color: '#0C4A6E',
+    textAlign: 'center',
+    fontWeight: 'bold',
   },
   input: {
     backgroundColor: '#FFF',

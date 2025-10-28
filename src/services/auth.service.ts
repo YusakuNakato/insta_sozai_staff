@@ -104,6 +104,53 @@ export const signUp = async (
 };
 
 /**
+ * 管理者として登録（開発者モード用）
+ */
+export const signUpAsAdmin = async (
+  email: string,
+  password: string,
+  name: string,
+  additionalInfo?: {
+    actualJobTitle?: string;
+    dailyAvailableHours?: number;
+    workingHoursStart?: string;
+    workingHoursEnd?: string;
+  }
+): Promise<{ user: User; firebaseUser: FirebaseUser }> => {
+  try {
+    // Firebase Authでユーザー作成（招待チェックなし）
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const firebaseUser = userCredential.user;
+
+    // Firestoreにユーザー情報を保存（管理者として）
+    const userData: Omit<User, 'id'> = {
+      name,
+      role: 'director', // 管理者として登録
+      email,
+      passwordHash: '', // Firebase Authが管理するため空文字
+      createdAt: Timestamp.now(),
+      // 追加情報
+      actualJobTitle: additionalInfo?.actualJobTitle,
+      dailyAvailableHours: additionalInfo?.dailyAvailableHours,
+      workingHoursStart: additionalInfo?.workingHoursStart,
+      workingHoursEnd: additionalInfo?.workingHoursEnd,
+    };
+
+    await setDoc(doc(db, 'users', firebaseUser.uid), userData);
+
+    return {
+      user: {
+        id: firebaseUser.uid,
+        ...userData,
+      },
+      firebaseUser,
+    };
+  } catch (error: any) {
+    throw new Error(`管理者登録に失敗しました: ${error.message}`);
+  }
+};
+
+/**
  * ログアウト
  */
 export const signOut = async (): Promise<void> => {
