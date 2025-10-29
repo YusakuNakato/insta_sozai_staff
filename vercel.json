@@ -1,0 +1,8 @@
+{
+  "name": "staff-work-tracker",
+  "version": 2,
+  "buildCommand": "npx expo export --platform web",
+  "outputDirectory": "dist",
+  "installCommand": "npm install",
+  "framework": null
+}

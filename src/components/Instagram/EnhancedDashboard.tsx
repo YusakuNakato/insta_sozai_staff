@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, Dimensions, ActivityIndicator } from 'react-native';
 import {
-  sampleStaffPerformance,
   generateTaskAllocationRecommendations,
 } from '../../services/instagramPerformance.service';
 import {
@@ -19,7 +18,7 @@ export default function EnhancedDashboard() {
   const { user } = useAuth();
   const [targetTasks, setTargetTasks] = useState(200);
   const [selectedStaff, setSelectedStaff] = useState<StaffPerformance | null>(null);
-  const [staffList, setStaffList] = useState<StaffPerformance[]>(sampleStaffPerformance);
+  const [staffList, setStaffList] = useState<StaffPerformance[]>([]);
   const [loading, setLoading] = useState(true);
 
   // 実データを取得
@@ -28,16 +27,11 @@ export default function EnhancedDashboard() {
       try {
         setLoading(true);
         const performances = await getAllStaffPerformances();
-
-        // データがある場合は実データを使用、ない場合はサンプルデータ
-        if (performances.length > 0) {
-          setStaffList(performances);
-        } else {
-          setStaffList(sampleStaffPerformance);
-        }
+        // 実データのみを使用（サンプルデータは使用しない）
+        setStaffList(performances);
       } catch (error) {
         console.error('Error loading staff performances:', error);
-        setStaffList(sampleStaffPerformance);
+        setStaffList([]);
       } finally {
         setLoading(false);
       }
