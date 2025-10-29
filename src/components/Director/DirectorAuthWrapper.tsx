@@ -32,7 +32,7 @@ export const DirectorAuthWrapper: React.FC = () => {
   return (
     <View style={styles.container}>
       <View style={styles.authBox}>
-        <Text style={styles.title}>ディレクター専用</Text>
+        <Text style={styles.title}>管理者専用</Text>
         <Text style={styles.subtitle}>パスワードを入力してください</Text>
 
         <TextInput

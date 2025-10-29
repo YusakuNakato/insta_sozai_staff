@@ -392,7 +392,7 @@ export const SettingsScreen: React.FC = () => {
                       </Text>
                       <Text style={styles.userSelectEmail}>{member.email}</Text>
                       <Text style={styles.userSelectRole}>
-                        {member.role === 'director' ? '🔑 ディレクター' : '👤 スタッフ'}
+                        {member.role === 'admin' ? '🔑 管理者' : '👤 スタッフ'}
                       </Text>
                     </View>
                   </TouchableOpacity>
@@ -533,11 +533,11 @@ export const SettingsScreen: React.FC = () => {
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.roleButton, role === 'director' && styles.roleButtonActive]}
-                  onPress={() => setRole('director')}
+                  style={[styles.roleButton, role === 'admin' && styles.roleButtonActive]}
+                  onPress={() => setRole('admin')}
                 >
-                  <Text style={[styles.roleButtonText, role === 'director' && styles.roleButtonTextActive]}>
-                    ディレクター
+                  <Text style={[styles.roleButtonText, role === 'admin' && styles.roleButtonTextActive]}>
+                    管理者
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -577,7 +577,7 @@ export const SettingsScreen: React.FC = () => {
                       <Text style={styles.listItemTitle}>{invitation.email}</Text>
                       <View style={styles.listItemMeta}>
                         <Text style={styles.listItemMetaText}>
-                          {invitation.role === 'director' ? 'ディレクター' : 'スタッフ'}
+                          {invitation.role === 'admin' ? '管理者' : 'スタッフ'}
                         </Text>
                         <Text style={styles.listItemMetaText}>
                           {invitation.createdAt.toDate().toLocaleDateString('ja-JP')}
@@ -686,7 +686,7 @@ export const SettingsScreen: React.FC = () => {
                     <Text style={styles.memberName}>{member.name}</Text>
                     <Text style={styles.memberEmail}>{member.email}</Text>
                     <Text style={styles.memberRole}>
-                      {member.role === 'director' ? '🔑 ディレクター' : '👤 スタッフ'}
+                      {member.role === 'admin' ? '🔑 管理者' : '👤 スタッフ'}
                     </Text>
                   </View>
                   <TouchableOpacity
@@ -805,7 +805,7 @@ export const SettingsScreen: React.FC = () => {
           <Text style={styles.title}>⚙️ 設定</Text>
           <Text style={styles.subtitle}>アプリ設定</Text>
         </View>
-        {user?.role === 'director' && (
+        {user?.role === 'admin' && (
           <View style={styles.headerButtons}>
             <TouchableOpacity
               style={styles.headerButton}
@@ -838,15 +838,15 @@ export const SettingsScreen: React.FC = () => {
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>役割:</Text>
             <Text style={styles.infoValue}>
-              {user?.role === 'director' ? 'ディレクター' : 'スタッフ'}
+              {user?.role === 'admin' ? '管理者' : 'スタッフ'}
             </Text>
           </View>
         </View>
 
-        {/* ディレクター専用セクション */}
-        {user?.role === 'director' && (
+        {/* 管理者専用セクション */}
+        {user?.role === 'admin' && (
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>ディレクター専用</Text>
+            <Text style={styles.cardTitle}>管理者専用</Text>
             <Text style={styles.cardDescription}>
               スタッフの招待や管理を行うことができます
             </Text>

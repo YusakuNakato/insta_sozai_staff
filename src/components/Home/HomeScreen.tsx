@@ -10,7 +10,7 @@ export const HomeScreen: React.FC = () => {
       <View style={styles.welcomeSection}>
         <Text style={styles.welcomeTitle}>ようこそ、{user?.name}さん</Text>
         <Text style={styles.welcomeSubtitle}>
-          {user?.role === 'director' ? 'ディレクター' : 'スタッフ'}
+          {user?.role === 'admin' ? '管理者' : 'スタッフ'}
         </Text>
       </View>
 
@@ -44,7 +44,7 @@ export const HomeScreen: React.FC = () => {
           </View>
         </View>
 
-        {user?.role === 'director' && (
+        {user?.role === 'admin' && (
           <View style={styles.featureCard}>
             <Text style={styles.featureIcon}>📈</Text>
             <View style={styles.featureContent}>
@@ -62,7 +62,7 @@ export const HomeScreen: React.FC = () => {
         <Text style={styles.stepText}>1. 左側のメニューから「日報入力」を選択</Text>
         <Text style={styles.stepText}>2. タスク情報を入力して登録</Text>
         <Text style={styles.stepText}>3. 「稼働一覧」で記録を確認</Text>
-        {user?.role === 'director' && (
+        {user?.role === 'admin' && (
           <Text style={styles.stepText}>4. 「分析」で全体の傾向を確認</Text>
         )}
       </View>

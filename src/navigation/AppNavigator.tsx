@@ -7,7 +7,6 @@ import { KnowledgeDatabase } from '../components/Knowledge/KnowledgeDatabase';
 import { DirectorAuthWrapper } from '../components/Director/DirectorAuthWrapper';
 import { AnalyticsDashboard } from '../components/Analytics/AnalyticsDashboard';
 import { HomeScreen } from '../components/Home/HomeScreen';
-import InstagramDashboard from '../components/Instagram/InstagramDashboard';
 import EnhancedDashboard from '../components/Instagram/EnhancedDashboard';
 import { SettingsScreen } from '../components/Settings/SettingsScreen';
 import { LoginScreen } from '../components/Auth/LoginScreen';
@@ -41,7 +40,7 @@ const MainDrawer: React.FC = () => {
         headerRight: () => (
           <View style={styles.headerRight}>
             <Text style={styles.userInfo}>
-              {user?.name} ({user?.role === 'director' ? 'ディレクター' : 'スタッフ'})
+              {user?.name} ({user?.role === 'admin' ? '管理者' : 'スタッフ'})
             </Text>
             <TouchableOpacity onPress={signOut} style={styles.logoutButton}>
               <Text style={styles.logoutText}>ログアウト</Text>
@@ -99,32 +98,21 @@ const MainDrawer: React.FC = () => {
         name="DirectorEvaluation"
         component={DirectorAuthWrapper}
         options={{
-          title: 'ディレクター専用',
-          drawerLabel: '🔒 ディレクター専用',
+          title: '管理者専用',
+          drawerLabel: '🔒 管理者専用',
           drawerItemStyle: {
             opacity: 0.7,
           },
         }}
       />
 
-      {user?.role === 'director' && (
+      {user?.role === 'admin' && (
         <Drawer.Screen
           name="Analytics"
           component={AnalyticsDashboard}
           options={{
             title: '分析',
             drawerLabel: '📊 分析',
-          }}
-        />
-      )}
-
-      {user?.role === 'director' && (
-        <Drawer.Screen
-          name="InstagramDashboard"
-          component={InstagramDashboard}
-          options={{
-            title: 'Instagram運用分析',
-            drawerLabel: '📸 Instagram分析（旧）',
           }}
         />
       )}

@@ -94,11 +94,11 @@ export const InviteManagement: React.FC = () => {
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.roleButton, role === 'director' && styles.roleButtonActive]}
-            onPress={() => setRole('director')}
+            style={[styles.roleButton, role === 'admin' && styles.roleButtonActive]}
+            onPress={() => setRole('admin')}
           >
-            <Text style={[styles.roleButtonText, role === 'director' && styles.roleButtonTextActive]}>
-              ディレクター
+            <Text style={[styles.roleButtonText, role === 'admin' && styles.roleButtonTextActive]}>
+              管理者
             </Text>
           </TouchableOpacity>
         </View>
@@ -136,7 +136,7 @@ export const InviteManagement: React.FC = () => {
                 <Text style={styles.invitationEmail}>{invitation.email}</Text>
                 <View style={styles.invitationMeta}>
                   <Text style={styles.invitationRole}>
-                    {invitation.role === 'director' ? 'ディレクター' : 'スタッフ'}
+                    {invitation.role === 'admin' ? '管理者' : 'スタッフ'}
                   </Text>
                   <Text style={styles.invitationDate}>
                     {invitation.createdAt.toDate().toLocaleDateString('ja-JP')}

@@ -125,7 +125,7 @@ export const signUpAsAdmin = async (
     // Firestoreにユーザー情報を保存（管理者として）
     const userData: Omit<User, 'id'> = {
       name,
-      role: 'director', // 管理者として登録
+      role: 'admin', // 管理者として登録
       email,
       passwordHash: '', // Firebase Authが管理するため空文字
       createdAt: Timestamp.now(),
