@@ -482,8 +482,8 @@ export const SettingsScreen: React.FC = () => {
     </View>
   );
 
-  // スタッフ管理画面を表示中の場合
-  if (showStaffManagement && isAuthenticated) {
+  // スタッフ管理画面を表示中の場合（管理者は認証不要）
+  if (showStaffManagement && (isAuthenticated || user?.role === 'admin')) {
     return (
     <View style={styles.container}>
       <View style={styles.header}>
