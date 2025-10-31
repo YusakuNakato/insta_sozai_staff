@@ -10,7 +10,6 @@ import { HomeScreen } from '../components/Home/HomeScreen';
 import EnhancedDashboard from '../components/Instagram/EnhancedDashboard';
 import { SettingsScreen } from '../components/Settings/SettingsScreen';
 import { LoginScreen } from '../components/Auth/LoginScreen';
-import { InviteManagement } from '../components/Admin/InviteManagement';
 import { useAuth } from '../hooks/useAuth';
 import { ActivityIndicator, View, StyleSheet, Text, TouchableOpacity } from 'react-native';
 
@@ -108,24 +107,14 @@ const MainDrawer: React.FC = () => {
       />
 
       {user?.role === 'admin' && (
-        <>
-          <Drawer.Screen
-            name="Analytics"
-            component={AnalyticsDashboard}
-            options={{
-              title: '分析',
-              drawerLabel: '📊 分析',
-            }}
-          />
-          <Drawer.Screen
-            name="InviteManagement"
-            component={InviteManagement}
-            options={{
-              title: 'メンバー招待',
-              drawerLabel: '✉️ メンバー招待',
-            }}
-          />
-        </>
+        <Drawer.Screen
+          name="Analytics"
+          component={AnalyticsDashboard}
+          options={{
+            title: '分析',
+            drawerLabel: '📊 分析',
+          }}
+        />
       )}
 
       <Drawer.Screen
