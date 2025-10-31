@@ -32,6 +32,8 @@ export async function inviteEmail(email: string, role: UserRole, invitedBy: stri
 export async function checkEmailInvited(email: string): Promise<InvitedEmail | null> {
   try {
     const normalizedEmail = email.toLowerCase().trim();
+    console.log('Checking invitation for email:', normalizedEmail);
+
     const q = query(
       collection(db, 'invitedEmails'),
       where('email', '==', normalizedEmail),
@@ -39,20 +41,28 @@ export async function checkEmailInvited(email: string): Promise<InvitedEmail | n
     );
 
     const snapshot = await getDocs(q);
+    console.log('Invitation query result:', snapshot.empty ? 'No invitations found' : `Found ${snapshot.size} invitation(s)`);
 
     if (snapshot.empty) {
       return null;
     }
 
     const doc = snapshot.docs[0];
-    return {
+    const invitation = {
       id: doc.id,
       ...doc.data(),
       createdAt: doc.data().createdAt || Timestamp.now(),
     } as InvitedEmail;
+
+    console.log('Found invitation:', invitation);
+    return invitation;
   } catch (error) {
     console.error('Error checking email invitation:', error);
-    return null;
+    // Firestoreのパーミッションエラーの場合は、より詳細なメッセージを表示
+    if (error instanceof Error && error.message.includes('permission')) {
+      console.error('Firestore permission error. Please check security rules for invitedEmails collection.');
+    }
+    throw error; // エラーを再スローして呼び出し側で処理できるようにする
   }
 }
 

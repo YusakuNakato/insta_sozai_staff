@@ -192,6 +192,15 @@ service cloud.firestore {
       allow update, delete: if request.auth != null &&
         resource.data.userId == request.auth.uid;
     }
+
+    // 招待メールアドレス管理
+    match /invitedEmails/{emailId} {
+      // 新規登録時に招待チェックを行うため、未認証でも読み取りを許可
+      allow read: if true;
+      // 管理者のみ作成・更新可能
+      allow create, update, delete: if request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
   }
 }
 ```
