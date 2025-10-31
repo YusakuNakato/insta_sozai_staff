@@ -42,6 +42,7 @@ export const SettingsScreen: React.FC = () => {
   const [editingStaff, setEditingStaff] = useState<User | null>(null);
   const [editForm, setEditForm] = useState({
     name: '',
+    role: 'staff' as UserRole,
     actualJobTitle: '',
     dailyAvailableHours: '',
     workingHoursStart: '',
@@ -58,19 +59,20 @@ export const SettingsScreen: React.FC = () => {
   const [deletingUsers, setDeletingUsers] = useState(false);
 
   useEffect(() => {
-    // パスワード認証済みでスタッフ管理画面の場合のみデータ読み込み
-    if (isAuthenticated && showStaffManagement) {
+    // 管理者かつスタッフ管理画面の場合はデータ読み込み
+    if (user?.role === 'admin' && showStaffManagement) {
+      setIsAuthenticated(true); // 管理者は自動的に認証済みにする
       loadInvitations();
       loadMembers();
     }
-  }, [isAuthenticated, showStaffManagement]);
+  }, [showStaffManagement, user]);
 
   useEffect(() => {
-    // 通常の設定画面でもパスワード認証済みならメンバーリストを読み込む
-    if (isAuthenticated && !showStaffManagement) {
+    // 通常の設定画面でもメンバーリストを読み込む
+    if (user?.role === 'admin' && !showStaffManagement) {
       loadMembers();
     }
-  }, [isAuthenticated, showStaffManagement]);
+  }, [showStaffManagement, user]);
 
   const handlePasswordSubmit = () => {
     if (passwordInput === SETTINGS_PASSWORD) {
@@ -162,6 +164,7 @@ export const SettingsScreen: React.FC = () => {
     setEditingStaff(staff);
     setEditForm({
       name: staff.name,
+      role: staff.role,
       actualJobTitle: staff.actualJobTitle || '',
       dailyAvailableHours: staff.dailyAvailableHours?.toString() || '',
       workingHoursStart: staff.workingHoursStart || '',
@@ -177,10 +180,17 @@ export const SettingsScreen: React.FC = () => {
       return;
     }
 
+    // 自分自身の役職を変更しようとしている場合は警告
+    if (editingStaff.id === user?.id && editForm.role !== editingStaff.role) {
+      Alert.alert('警告', '自分自身の役職を変更することはできません');
+      return;
+    }
+
     setSaving(true);
     try {
       const updates: any = {
         name: editForm.name.trim(),
+        role: editForm.role,
         actualJobTitle: editForm.actualJobTitle.trim() || undefined,
         dailyAvailableHours: editForm.dailyAvailableHours ? parseFloat(editForm.dailyAvailableHours) : undefined,
         workingHoursStart: editForm.workingHoursStart.trim() || undefined,
@@ -188,7 +198,7 @@ export const SettingsScreen: React.FC = () => {
       };
 
       await updateUser(editingStaff.id, updates);
-      Alert.alert('成功', 'スタッフ情報を更新しました');
+      Alert.alert('✅ 更新完了', 'メンバー情報を更新しました');
       setEditingStaff(null);
       loadMembers();
     } catch (error: any) {
@@ -213,10 +223,16 @@ export const SettingsScreen: React.FC = () => {
     setAddingUser(true);
     try {
       await inviteEmail(addUserEmail.trim(), 'staff', user.id);
-      Alert.alert('成功', `${addUserEmail} を招待リストに追加しました`);
       setAddUserEmail('');
       setShowAddUserModal(false);
       loadMembers();
+
+      // 成功メッセージを分かりやすく表示
+      Alert.alert(
+        '✅ 招待が完了しました',
+        `${addUserEmail} を招待リストに追加しました。\n\nこのメールアドレスでアプリに新規登録できるようになりました。`,
+        [{ text: 'OK' }]
+      );
     } catch (error: any) {
       Alert.alert('エラー', error.message);
     } finally {
@@ -606,7 +622,7 @@ export const SettingsScreen: React.FC = () => {
         {activeTab === 'staff' && (
           <View style={styles.card}>
             <View style={styles.cardHeader}>
-              <Text style={styles.cardTitle}>スタッフ一覧</Text>
+              <Text style={styles.cardTitle}>メンバー一覧（編集可能）</Text>
               <TouchableOpacity onPress={loadMembers} disabled={loadingMembers}>
                 <Text style={styles.refreshButton}>
                   {loadingMembers ? '更新中...' : '🔄'}
@@ -617,9 +633,9 @@ export const SettingsScreen: React.FC = () => {
             {loadingMembers ? (
               <ActivityIndicator size="large" color="#6366f1" style={styles.loader} />
             ) : members.length === 0 ? (
-              <Text style={styles.emptyText}>スタッフがいません</Text>
+              <Text style={styles.emptyText}>メンバーがいません</Text>
             ) : (
-              members.filter(m => m.role === 'staff').map((staff) => (
+              members.map((staff) => (
                 <View key={staff.id} style={styles.staffCard}>
                   <View style={styles.staffCardHeader}>
                     <Text style={styles.staffCardName}>{staff.name}</Text>
@@ -632,6 +648,12 @@ export const SettingsScreen: React.FC = () => {
                   </View>
 
                   <View style={styles.staffCardBody}>
+                    <View style={styles.staffInfoRow}>
+                      <Text style={styles.staffInfoLabel}>役職:</Text>
+                      <Text style={styles.staffInfoValue}>
+                        {staff.role === 'admin' ? '🔑 管理者' : '👤 スタッフ'}
+                      </Text>
+                    </View>
                     <View style={styles.staffInfoRow}>
                       <Text style={styles.staffInfoLabel}>メール:</Text>
                       <Text style={styles.staffInfoValue}>{staff.email}</Text>
@@ -729,6 +751,31 @@ export const SettingsScreen: React.FC = () => {
                 value={editForm.name}
                 onChangeText={(text) => setEditForm({ ...editForm, name: text })}
               />
+
+              <Text style={styles.modalLabel}>役職 *</Text>
+              <View style={styles.roleSelector}>
+                <TouchableOpacity
+                  style={[styles.roleButton, editForm.role === 'staff' && styles.roleButtonActive]}
+                  onPress={() => setEditForm({ ...editForm, role: 'staff' })}
+                  disabled={editingStaff?.id === user?.id}
+                >
+                  <Text style={[styles.roleButtonText, editForm.role === 'staff' && styles.roleButtonTextActive]}>
+                    👤 スタッフ
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.roleButton, editForm.role === 'admin' && styles.roleButtonActive]}
+                  onPress={() => setEditForm({ ...editForm, role: 'admin' })}
+                  disabled={editingStaff?.id === user?.id}
+                >
+                  <Text style={[styles.roleButtonText, editForm.role === 'admin' && styles.roleButtonTextActive]}>
+                    🔑 管理者
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              {editingStaff?.id === user?.id && (
+                <Text style={styles.warningText}>※ 自分自身の役職は変更できません</Text>
+              )}
 
               <Text style={styles.modalLabel}>本職の表示名</Text>
               <TextInput
@@ -1457,5 +1504,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 12,
     marginBottom: 20,
+  },
+  warningText: {
+    fontSize: 12,
+    color: '#f59e0b',
+    marginTop: 4,
+    marginBottom: 12,
   },
 });
