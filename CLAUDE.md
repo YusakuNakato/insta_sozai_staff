@@ -183,7 +183,10 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /users/{userId} {
+      // 自分のドキュメントは読み書き可能
       allow read, write: if request.auth != null && request.auth.uid == userId;
+      // 認証済みユーザーは全ユーザーの情報を読み取り可能（役割チェックのため）
+      allow read: if request.auth != null;
     }
 
     match /taskReports/{reportId} {

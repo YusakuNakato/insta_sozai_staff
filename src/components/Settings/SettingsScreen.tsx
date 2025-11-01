@@ -220,21 +220,32 @@ export const SettingsScreen: React.FC = () => {
       return;
     }
 
+    const emailToAdd = addUserEmail.trim();
     setAddingUser(true);
+
     try {
-      await inviteEmail(addUserEmail.trim(), 'staff', user.id);
+      console.log('招待処理開始:', emailToAdd);
+      await inviteEmail(emailToAdd, 'staff', user.id);
+      console.log('招待処理成功:', emailToAdd);
+
+      // モーダルを閉じる前に成功メッセージを表示
       setAddUserEmail('');
       setShowAddUserModal(false);
-      loadMembers();
 
-      // 成功メッセージを分かりやすく表示
-      Alert.alert(
-        '✅ 招待が完了しました',
-        `${addUserEmail} を招待リストに追加しました。\n\nこのメールアドレスでアプリに新規登録できるようになりました。`,
-        [{ text: 'OK' }]
-      );
+      // 招待リストを更新
+      await loadMembers();
+
+      // 成功メッセージを確実に表示
+      setTimeout(() => {
+        Alert.alert(
+          'ユーザーの追加が完了しました',
+          `${emailToAdd} を招待リストに追加しました。\n\nこのメールアドレスでアプリに新規登録できるようになりました。`,
+          [{ text: 'OK' }]
+        );
+      }, 100);
     } catch (error: any) {
-      Alert.alert('エラー', error.message);
+      console.error('招待処理エラー:', error);
+      Alert.alert('エラー', `ユーザーの追加に失敗しました\n\n${error.message}`);
     } finally {
       setAddingUser(false);
     }

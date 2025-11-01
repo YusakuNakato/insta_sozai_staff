@@ -7,21 +7,33 @@ import { InvitedEmail, UserRole } from '../types';
  */
 export async function inviteEmail(email: string, role: UserRole, invitedBy: string): Promise<void> {
   try {
+    console.log('招待処理開始 - Email:', email, 'Role:', role, 'InvitedBy:', invitedBy);
+
     // すでに招待済みかチェック
     const existingInvite = await getInvitationByEmail(email);
     if (existingInvite) {
+      console.log('既に招待済み:', existingInvite);
       throw new Error('このメールアドレスはすでに招待されています');
     }
 
-    await addDoc(collection(db, 'invitedEmails'), {
+    const inviteData = {
       email: email.toLowerCase().trim(),
       role,
       invitedBy,
       createdAt: Timestamp.now(),
       used: false,
-    });
-  } catch (error) {
+    };
+
+    console.log('Firestoreに招待データを保存:', inviteData);
+    const docRef = await addDoc(collection(db, 'invitedEmails'), inviteData);
+    console.log('招待データ保存成功 - Document ID:', docRef.id);
+  } catch (error: any) {
     console.error('Error inviting email:', error);
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      stack: error.stack,
+    });
     throw error;
   }
 }
