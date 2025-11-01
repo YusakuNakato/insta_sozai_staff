@@ -14,15 +14,5 @@ service cloud.firestore {
       allow update, delete: if request.auth != null &&
         resource.data.userId == request.auth.uid;
     }
-
-    // 招待メールアドレス管理
-    match /invitedEmails/{emailId} {
-      // 新規登録時に招待チェックを行うため、未認証でも読み取りを許可
-      allow read: if true;
-      // 認証済みユーザーなら作成可能（サーバーサイドで管理者チェック推奨）
-      // または管理者のみに制限する場合は下記を使用
-      allow create, update, delete: if request.auth != null &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
-    }
   }
 }

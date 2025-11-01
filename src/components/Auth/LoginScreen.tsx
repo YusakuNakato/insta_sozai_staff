@@ -114,14 +114,6 @@ export const LoginScreen: React.FC = () => {
             </View>
           )}
 
-          {isSignUp && !devMode && (
-            <View style={styles.inviteNotice}>
-              <Text style={styles.inviteNoticeText}>
-                ※ 招待されたメールアドレスでのみ登録できます
-              </Text>
-            </View>
-          )}
-
           {isSignUp && (
             <TextInput
               style={styles.input}

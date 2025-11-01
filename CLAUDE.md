@@ -195,18 +195,15 @@ service cloud.firestore {
       allow update, delete: if request.auth != null &&
         resource.data.userId == request.auth.uid;
     }
-
-    // 招待メールアドレス管理
-    match /invitedEmails/{emailId} {
-      // 新規登録時に招待チェックを行うため、未認証でも読み取りを許可
-      allow read: if true;
-      // 管理者のみ作成・更新可能
-      allow create, update, delete: if request.auth != null &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
-    }
   }
 }
 ```
+
+**ユーザー登録ポリシー**:
+- 共有リンクを知っている誰でも新規登録可能
+- デフォルトで`staff`ロールとして登録
+- 管理者（`admin`ロール）のみが設定画面からメンバー管理可能
+- 管理者は開発者モード（タイトルを5回タップ）で登録可能
 
 ## トラブルシューティング
 

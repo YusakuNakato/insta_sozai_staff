@@ -13,7 +13,6 @@ import {
 } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
 import { User, UserRole } from '../types';
-import { checkEmailInvited, markInvitationAsUsed } from './invitation.service';
 
 /**
  * ユーザーログイン
@@ -48,7 +47,7 @@ export const signIn = async (
 };
 
 /**
- * ユーザー登録（招待制）
+ * ユーザー登録（誰でも登録可能）
  */
 export const signUp = async (
   email: string,
@@ -64,24 +63,14 @@ export const signUp = async (
   try {
     console.log('Starting user registration for:', email);
 
-    // 招待メールアドレスチェック
-    const invitation = await checkEmailInvited(email);
-
-    if (!invitation) {
-      console.log('No invitation found for email:', email);
-      throw new Error('このメールアドレスは招待されていません。管理者に招待を依頼してください。\n\n※開発者モードを有効にすると、招待なしで管理者アカウントを作成できます（タイトルを5回タップ）。');
-    }
-
-    console.log('Invitation found, proceeding with user creation');
-
     // Firebase Authでユーザー作成
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const firebaseUser = userCredential.user;
 
-    // Firestoreにユーザー情報を保存（招待時のroleを使用）
+    // Firestoreにユーザー情報を保存（デフォルトでスタッフ）
     const userData: Omit<User, 'id'> = {
       name,
-      role: invitation.role, // 招待時に指定されたroleを使用
+      role: 'staff', // デフォルトでスタッフとして登録
       email,
       passwordHash: '', // Firebase Authが管理するため空文字
       createdAt: Timestamp.now(),
@@ -95,10 +84,6 @@ export const signUp = async (
     await setDoc(doc(db, 'users', firebaseUser.uid), userData);
     console.log('User document created in Firestore');
 
-    // 招待を使用済みにマーク
-    await markInvitationAsUsed(invitation.id, firebaseUser.uid);
-    console.log('Invitation marked as used');
-
     return {
       user: {
         id: firebaseUser.uid,
@@ -108,12 +93,6 @@ export const signUp = async (
     };
   } catch (error: any) {
     console.error('Sign up error:', error);
-
-    // Firestoreのパーミッションエラーの詳細を表示
-    if (error.message.includes('permission') || error.message.includes('Missing or insufficient permissions')) {
-      throw new Error('Firestoreのアクセス権限エラー: セキュリティルールを確認してください。\n\n詳細: invitedEmailsコレクションへの読み取り権限が必要です。');
-    }
-
     throw new Error(`ユーザー登録に失敗しました: ${error.message}`);
   }
 };

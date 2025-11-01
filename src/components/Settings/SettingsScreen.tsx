@@ -11,28 +11,13 @@ import {
   Modal,
 } from 'react-native';
 import { useAuth } from '../../hooks/useAuth';
-import { inviteEmail, getAllInvitations } from '../../services/invitation.service';
 import { getAllUsers, deleteUser, updateUser } from '../../services/user.service';
-import { InvitedEmail, User, UserRole } from '../../types';
-
-const SETTINGS_PASSWORD = process.env.EXPO_PUBLIC_SETTINGS_PASSWORD || 'CHANGE_ME';
+import { User, UserRole } from '../../types';
 
 export const SettingsScreen: React.FC = () => {
   const { user } = useAuth();
   const [showStaffManagement, setShowStaffManagement] = useState(false);
-  const [activeTab, setActiveTab] = useState<'invite' | 'members' | 'staff'>('invite');
-
-  // パスワード認証関連（設定画面全体の保護）
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [passwordInput, setPasswordInput] = useState('');
-  const [passwordError, setPasswordError] = useState('');
-
-  // 招待関連
-  const [email, setEmail] = useState('');
-  const [role, setRole] = useState<UserRole>('staff');
-  const [inviting, setInviting] = useState(false);
-  const [invitations, setInvitations] = useState<InvitedEmail[]>([]);
-  const [loadingInvitations, setLoadingInvitations] = useState(false);
+  const [activeTab, setActiveTab] = useState<'staff' | 'members'>('staff');
 
   // メンバー関連
   const [members, setMembers] = useState<User[]>([]);
@@ -50,51 +35,17 @@ export const SettingsScreen: React.FC = () => {
   });
   const [saving, setSaving] = useState(false);
 
-  // ユーザー追加・削除モーダル関連
-  const [showAddUserModal, setShowAddUserModal] = useState(false);
+  // ユーザー削除モーダル関連
   const [showDeleteUserModal, setShowDeleteUserModal] = useState(false);
-  const [addUserEmail, setAddUserEmail] = useState('');
-  const [addingUser, setAddingUser] = useState(false);
   const [selectedUsersForDeletion, setSelectedUsersForDeletion] = useState<string[]>([]);
   const [deletingUsers, setDeletingUsers] = useState(false);
 
   useEffect(() => {
     // 管理者かつスタッフ管理画面の場合はデータ読み込み
     if (user?.role === 'admin' && showStaffManagement) {
-      setIsAuthenticated(true); // 管理者は自動的に認証済みにする
-      loadInvitations();
       loadMembers();
     }
   }, [showStaffManagement, user]);
-
-  useEffect(() => {
-    // 通常の設定画面でもメンバーリストを読み込む
-    if (user?.role === 'admin' && !showStaffManagement) {
-      loadMembers();
-    }
-  }, [showStaffManagement, user]);
-
-  const handlePasswordSubmit = () => {
-    if (passwordInput === SETTINGS_PASSWORD) {
-      setIsAuthenticated(true);
-      setPasswordError('');
-      setPasswordInput('');
-    } else {
-      setPasswordError('パスワードが正しくありません');
-    }
-  };
-
-  const loadInvitations = async () => {
-    setLoadingInvitations(true);
-    try {
-      const data = await getAllInvitations();
-      setInvitations(data.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis()));
-    } catch (error) {
-      console.error('Error loading invitations:', error);
-    } finally {
-      setLoadingInvitations(false);
-    }
-  };
 
   const loadMembers = async () => {
     setLoadingMembers(true);
@@ -105,30 +56,6 @@ export const SettingsScreen: React.FC = () => {
       console.error('Error loading members:', error);
     } finally {
       setLoadingMembers(false);
-    }
-  };
-
-  const handleInvite = async () => {
-    if (!email.trim()) {
-      Alert.alert('エラー', 'メールアドレスを入力してください');
-      return;
-    }
-
-    if (!user) {
-      Alert.alert('エラー', 'ログインしてください');
-      return;
-    }
-
-    setInviting(true);
-    try {
-      await inviteEmail(email.trim(), role, user.id);
-      Alert.alert('成功', `${email} を招待しました`);
-      setEmail('');
-      loadInvitations();
-    } catch (error: any) {
-      Alert.alert('エラー', error.message);
-    } finally {
-      setInviting(false);
     }
   };
 
@@ -208,49 +135,6 @@ export const SettingsScreen: React.FC = () => {
     }
   };
 
-  // ユーザー追加処理
-  const handleAddUser = async () => {
-    if (!addUserEmail.trim()) {
-      Alert.alert('エラー', 'メールアドレスを入力してください');
-      return;
-    }
-
-    if (!user) {
-      Alert.alert('エラー', 'ログインしてください');
-      return;
-    }
-
-    const emailToAdd = addUserEmail.trim();
-    setAddingUser(true);
-
-    try {
-      console.log('招待処理開始:', emailToAdd);
-      await inviteEmail(emailToAdd, 'staff', user.id);
-      console.log('招待処理成功:', emailToAdd);
-
-      // モーダルを閉じる前に成功メッセージを表示
-      setAddUserEmail('');
-      setShowAddUserModal(false);
-
-      // 招待リストを更新
-      await loadMembers();
-
-      // 成功メッセージを確実に表示
-      setTimeout(() => {
-        Alert.alert(
-          'ユーザーの追加が完了しました',
-          `${emailToAdd} を招待リストに追加しました。\n\nこのメールアドレスでアプリに新規登録できるようになりました。`,
-          [{ text: 'OK' }]
-        );
-      }, 100);
-    } catch (error: any) {
-      console.error('招待処理エラー:', error);
-      Alert.alert('エラー', `ユーザーの追加に失敗しました\n\n${error.message}`);
-    } finally {
-      setAddingUser(false);
-    }
-  };
-
   // ユーザー削除処理
   const handleDeleteUsers = async () => {
     if (selectedUsersForDeletion.length === 0) {
@@ -304,63 +188,6 @@ export const SettingsScreen: React.FC = () => {
       setSelectedUsersForDeletion([...selectedUsersForDeletion, userId]);
     }
   };
-
-  // ユーザー追加モーダル
-  const renderAddUserModal = () => (
-    <Modal
-      visible={showAddUserModal}
-      transparent={true}
-      animationType="slide"
-      onRequestClose={() => {
-        setShowAddUserModal(false);
-        setAddUserEmail('');
-      }}
-    >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>ユーザー追加</Text>
-            <TouchableOpacity onPress={() => {
-              setShowAddUserModal(false);
-              setAddUserEmail('');
-            }}>
-              <Text style={styles.closeButton}>✕</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.modalBody}>
-            <Text style={styles.modalDescription}>
-              招待するユーザーのメールアドレスを入力してください。
-              このメールアドレスでのみ新規登録が可能になります。
-            </Text>
-
-            <Text style={styles.modalLabel}>メールアドレス</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="example@email.com"
-              value={addUserEmail}
-              onChangeText={setAddUserEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoComplete="email"
-            />
-
-            <TouchableOpacity
-              style={[styles.primaryButton, addingUser && styles.primaryButtonDisabled]}
-              onPress={handleAddUser}
-              disabled={addingUser}
-            >
-              {addingUser ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.primaryButtonText}>追加</Text>
-              )}
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-    </Modal>
-  );
 
   // ユーザー削除モーダル
   const renderDeleteUserModal = () => (
@@ -455,46 +282,8 @@ export const SettingsScreen: React.FC = () => {
     </Modal>
   );
 
-  // 設定画面のパスワード認証画面
-  const renderPasswordScreen = () => (
-    <View style={styles.container}>
-      <View style={styles.passwordContainer}>
-        <View style={styles.passwordCard}>
-          <Text style={styles.passwordTitle}>⚙️ 設定</Text>
-          <Text style={styles.passwordDescription}>
-            設定画面にアクセスするには、パスワードが必要です。
-          </Text>
-
-          <TextInput
-            style={styles.passwordInput}
-            placeholder="パスワード"
-            value={passwordInput}
-            onChangeText={(text) => {
-              setPasswordInput(text);
-              setPasswordError('');
-            }}
-            secureTextEntry
-            autoCapitalize="none"
-            onSubmitEditing={handlePasswordSubmit}
-          />
-
-          {passwordError ? (
-            <Text style={styles.errorText}>{passwordError}</Text>
-          ) : null}
-
-          <TouchableOpacity
-            style={styles.passwordButton}
-            onPress={handlePasswordSubmit}
-          >
-            <Text style={styles.passwordButtonText}>ログイン</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </View>
-  );
-
-  // スタッフ管理画面を表示中の場合（管理者は認証不要）
-  if (showStaffManagement && (isAuthenticated || user?.role === 'admin')) {
+  // スタッフ管理画面を表示中の場合（管理者のみアクセス可能）
+  if (showStaffManagement && user?.role === 'admin') {
     return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -505,19 +294,11 @@ export const SettingsScreen: React.FC = () => {
       {/* タブ */}
       <View style={styles.tabContainer}>
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'invite' && styles.tabActive]}
-          onPress={() => setActiveTab('invite')}
-        >
-          <Text style={[styles.tabText, activeTab === 'invite' && styles.tabTextActive]}>
-            ✉️ 招待管理
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
           style={[styles.tab, activeTab === 'staff' && styles.tabActive]}
           onPress={() => setActiveTab('staff')}
         >
           <Text style={[styles.tabText, activeTab === 'staff' && styles.tabTextActive]}>
-            👤 スタッフ管理
+            👤 メンバー管理
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -531,105 +312,7 @@ export const SettingsScreen: React.FC = () => {
       </View>
 
       <ScrollView style={styles.content}>
-        {/* 招待管理タブ */}
-        {activeTab === 'invite' && (
-          <>
-            {/* 招待フォーム */}
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>新規招待</Text>
-
-              <Text style={styles.label}>メールアドレス</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="example@email.com"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoComplete="email"
-              />
-
-              <Text style={styles.label}>役割</Text>
-              <View style={styles.roleSelector}>
-                <TouchableOpacity
-                  style={[styles.roleButton, role === 'staff' && styles.roleButtonActive]}
-                  onPress={() => setRole('staff')}
-                >
-                  <Text style={[styles.roleButtonText, role === 'staff' && styles.roleButtonTextActive]}>
-                    スタッフ
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.roleButton, role === 'admin' && styles.roleButtonActive]}
-                  onPress={() => setRole('admin')}
-                >
-                  <Text style={[styles.roleButtonText, role === 'admin' && styles.roleButtonTextActive]}>
-                    管理者
-                  </Text>
-                </TouchableOpacity>
-              </View>
-
-              <TouchableOpacity
-                style={[styles.primaryButton, inviting && styles.primaryButtonDisabled]}
-                onPress={handleInvite}
-                disabled={inviting}
-              >
-                {inviting ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={styles.primaryButtonText}>招待を送信</Text>
-                )}
-              </TouchableOpacity>
-            </View>
-
-            {/* 招待リスト */}
-            <View style={styles.card}>
-              <View style={styles.cardHeader}>
-                <Text style={styles.cardTitle}>招待済みメールアドレス</Text>
-                <TouchableOpacity onPress={loadInvitations} disabled={loadingInvitations}>
-                  <Text style={styles.refreshButton}>
-                    {loadingInvitations ? '更新中...' : '🔄'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-
-              {loadingInvitations ? (
-                <ActivityIndicator size="large" color="#6366f1" style={styles.loader} />
-              ) : invitations.length === 0 ? (
-                <Text style={styles.emptyText}>招待はまだありません</Text>
-              ) : (
-                invitations.map((invitation) => (
-                  <View key={invitation.id} style={styles.listItem}>
-                    <View style={styles.listItemInfo}>
-                      <Text style={styles.listItemTitle}>{invitation.email}</Text>
-                      <View style={styles.listItemMeta}>
-                        <Text style={styles.listItemMetaText}>
-                          {invitation.role === 'admin' ? '管理者' : 'スタッフ'}
-                        </Text>
-                        <Text style={styles.listItemMetaText}>
-                          {invitation.createdAt.toDate().toLocaleDateString('ja-JP')}
-                        </Text>
-                      </View>
-                    </View>
-                    <View style={[
-                      styles.statusBadge,
-                      invitation.used ? styles.statusBadgeUsed : styles.statusBadgePending
-                    ]}>
-                      <Text style={[
-                        styles.statusText,
-                        invitation.used ? styles.statusTextUsed : styles.statusTextPending
-                      ]}>
-                        {invitation.used ? '使用済み' : '未使用'}
-                      </Text>
-                    </View>
-                  </View>
-                ))
-              )}
-            </View>
-          </>
-        )}
-
-        {/* スタッフ管理タブ */}
+        {/* メンバー管理タブ */}
         {activeTab === 'staff' && (
           <View style={styles.card}>
             <View style={styles.cardHeader}>
@@ -748,7 +431,7 @@ export const SettingsScreen: React.FC = () => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>スタッフ情報編集</Text>
+              <Text style={styles.modalTitle}>メンバー情報編集</Text>
               <TouchableOpacity onPress={() => setEditingStaff(null)}>
                 <Text style={styles.closeButton}>✕</Text>
               </TouchableOpacity>
@@ -841,10 +524,7 @@ export const SettingsScreen: React.FC = () => {
       {/* 戻るボタン */}
       <TouchableOpacity
         style={styles.backButton}
-        onPress={() => {
-          setShowStaffManagement(false);
-          setIsAuthenticated(false);
-        }}
+        onPress={() => setShowStaffManagement(false)}
       >
         <Text style={styles.backButtonText}>← 設定に戻る</Text>
       </TouchableOpacity>
@@ -855,30 +535,11 @@ export const SettingsScreen: React.FC = () => {
   // 通常の設定画面
   return (
     <View style={styles.container}>
-      {renderAddUserModal()}
       {renderDeleteUserModal()}
 
       <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Text style={styles.title}>⚙️ 設定</Text>
-          <Text style={styles.subtitle}>アプリ設定</Text>
-        </View>
-        {user?.role === 'admin' && (
-          <View style={styles.headerButtons}>
-            <TouchableOpacity
-              style={styles.headerButton}
-              onPress={() => setShowAddUserModal(true)}
-            >
-              <Text style={styles.headerButtonText}>＋ ユーザー追加</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.headerButton, styles.headerButtonDanger]}
-              onPress={() => setShowDeleteUserModal(true)}
-            >
-              <Text style={styles.headerButtonText}>🗑 ユーザー削除</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+        <Text style={styles.title}>⚙️ 設定</Text>
+        <Text style={styles.subtitle}>アプリ設定</Text>
       </View>
 
       <ScrollView style={styles.content}>
@@ -906,13 +567,13 @@ export const SettingsScreen: React.FC = () => {
           <View style={styles.card}>
             <Text style={styles.cardTitle}>管理者専用</Text>
             <Text style={styles.cardDescription}>
-              スタッフの招待や管理を行うことができます
+              メンバーの管理を行うことができます
             </Text>
             <TouchableOpacity
               style={styles.primaryButton}
               onPress={() => setShowStaffManagement(true)}
             >
-              <Text style={styles.primaryButtonText}>🔒 スタッフ管理</Text>
+              <Text style={styles.primaryButtonText}>🔒 メンバー管理</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -943,34 +604,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#6366f1',
     padding: 24,
     paddingTop: 60,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  headerLeft: {
-    flex: 1,
-  },
-  headerButtons: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 4,
-  },
-  headerButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-  },
-  headerButtonDanger: {
-    backgroundColor: 'rgba(239, 68, 68, 0.3)',
-    borderColor: 'rgba(239, 68, 68, 0.5)',
-  },
-  headerButtonText: {
-    color: '#ffffff',
-    fontSize: 12,
-    fontWeight: '600',
   },
   title: {
     fontSize: 24,
@@ -981,88 +614,6 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 14,
     color: '#e0e7ff',
-  },
-  restrictedContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  restrictedText: {
-    fontSize: 16,
-    color: '#6b7280',
-    textAlign: 'center',
-  },
-  passwordContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  passwordModalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  passwordCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    padding: 32,
-    width: '100%',
-    maxWidth: 400,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  passwordModalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  passwordTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#1f2937',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  passwordDescription: {
-    fontSize: 14,
-    color: '#6b7280',
-    marginBottom: 24,
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-  passwordInput: {
-    backgroundColor: '#f9fafb',
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    borderRadius: 8,
-    padding: 14,
-    fontSize: 16,
-    marginBottom: 12,
-  },
-  errorText: {
-    color: '#ef4444',
-    fontSize: 13,
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  passwordButton: {
-    backgroundColor: '#6366f1',
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  passwordButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: 'bold',
   },
   tabContainer: {
     flexDirection: 'row',
@@ -1114,61 +665,11 @@ const styles = StyleSheet.create({
     color: '#1f2937',
     marginBottom: 16,
   },
-  label: {
+  cardDescription: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: 8,
-  },
-  input: {
-    backgroundColor: '#f9fafb',
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    marginBottom: 16,
-  },
-  roleSelector: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 24,
-  },
-  roleButton: {
-    flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: '#e5e7eb',
-    backgroundColor: '#ffffff',
-    alignItems: 'center',
-  },
-  roleButtonActive: {
-    borderColor: '#6366f1',
-    backgroundColor: '#eef2ff',
-  },
-  roleButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
     color: '#6b7280',
-  },
-  roleButtonTextActive: {
-    color: '#6366f1',
-  },
-  primaryButton: {
-    backgroundColor: '#6366f1',
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  primaryButtonDisabled: {
-    opacity: 0.6,
-  },
-  primaryButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: 'bold',
+    marginBottom: 16,
+    lineHeight: 20,
   },
   refreshButton: {
     fontSize: 14,
@@ -1183,52 +684,6 @@ const styles = StyleSheet.create({
     color: '#9ca3af',
     fontSize: 14,
     paddingVertical: 20,
-  },
-  listItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
-  },
-  listItemInfo: {
-    flex: 1,
-  },
-  listItemTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#1f2937',
-    marginBottom: 4,
-  },
-  listItemMeta: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  listItemMetaText: {
-    fontSize: 12,
-    color: '#6b7280',
-  },
-  statusBadge: {
-    paddingVertical: 4,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-  },
-  statusBadgePending: {
-    backgroundColor: '#fef3c7',
-  },
-  statusBadgeUsed: {
-    backgroundColor: '#d1fae5',
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  statusTextPending: {
-    color: '#92400e',
-  },
-  statusTextUsed: {
-    color: '#065f46',
   },
   memberItem: {
     flexDirection: 'row',
@@ -1275,7 +730,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
   },
-  // スタッフ管理用スタイル
   staffCard: {
     backgroundColor: '#f9fafb',
     borderRadius: 12,
@@ -1324,7 +778,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     flex: 1,
   },
-  // モーダル用スタイル
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -1372,6 +825,39 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 16,
     marginBottom: 8,
+  },
+  modalDescription: {
+    fontSize: 14,
+    color: '#6b7280',
+    marginBottom: 20,
+    lineHeight: 20,
+  },
+  roleSelector: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 12,
+  },
+  roleButton: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#e5e7eb',
+    backgroundColor: '#ffffff',
+    alignItems: 'center',
+  },
+  roleButtonActive: {
+    borderColor: '#6366f1',
+    backgroundColor: '#eef2ff',
+  },
+  roleButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6b7280',
+  },
+  roleButtonTextActive: {
+    color: '#6366f1',
   },
   timeRow: {
     flexDirection: 'row',
@@ -1431,19 +917,17 @@ const styles = StyleSheet.create({
     color: '#1f2937',
     fontWeight: '600',
   },
-  cardDescription: {
-    fontSize: 14,
-    color: '#6b7280',
-    marginBottom: 16,
-    lineHeight: 20,
+  primaryButton: {
+    backgroundColor: '#6366f1',
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: 'center',
   },
-  modalDescription: {
-    fontSize: 14,
-    color: '#6b7280',
-    marginBottom: 20,
-    lineHeight: 20,
+  primaryButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
-  // ユーザー選択用スタイル
   userSelectItem: {
     flexDirection: 'row',
     alignItems: 'center',
