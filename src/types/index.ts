@@ -1,6 +1,6 @@
 import { Timestamp } from 'firebase/firestore';
 
-export type UserRole = 'staff' | 'admin';
+export type UserRole = 'staff' | 'director' | 'admin';
 
 export interface User {
   id: string;
@@ -14,18 +14,6 @@ export interface User {
   dailyAvailableHours?: number;     // 1日の稼働可能時間数
   workingHoursStart?: string;       // 稼働時間帯（開始）例: "09:00"
   workingHoursEnd?: string;         // 稼働時間帯（終了）例: "18:00"
-}
-
-// 招待メールアドレス管理
-export interface InvitedEmail {
-  id: string;
-  email: string;
-  role: UserRole;
-  invitedBy: string;        // 招待したユーザーID
-  createdAt: Timestamp;
-  used: boolean;            // 使用済みフラグ
-  usedBy?: string;          // 使用したユーザーID
-  usedAt?: Timestamp;       // 使用日時
 }
 
 export type TaskType = 'create' | 'fix';

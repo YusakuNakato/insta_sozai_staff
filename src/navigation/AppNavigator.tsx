@@ -40,7 +40,7 @@ const MainDrawer: React.FC = () => {
         headerRight: () => (
           <View style={styles.headerRight}>
             <Text style={styles.userInfo}>
-              {user?.name} ({user?.role === 'admin' ? '管理者' : 'スタッフ'})
+              {user?.name} ({user?.role === 'admin' ? '管理者' : user?.role === 'director' ? 'ディレクター' : 'スタッフ'})
             </Text>
             <TouchableOpacity onPress={signOut} style={styles.logoutButton}>
               <Text style={styles.logoutText}>ログアウト</Text>

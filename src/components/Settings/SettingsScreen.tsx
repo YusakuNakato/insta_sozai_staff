@@ -246,7 +246,7 @@ export const SettingsScreen: React.FC = () => {
                       </Text>
                       <Text style={styles.userSelectEmail}>{member.email}</Text>
                       <Text style={styles.userSelectRole}>
-                        {member.role === 'admin' ? '🔑 管理者' : '👤 スタッフ'}
+                        {member.role === 'admin' ? '🔑 管理者' : member.role === 'director' ? '🎬 ディレクター' : '👤 スタッフ'}
                       </Text>
                     </View>
                   </TouchableOpacity>
@@ -345,7 +345,7 @@ export const SettingsScreen: React.FC = () => {
                     <View style={styles.staffInfoRow}>
                       <Text style={styles.staffInfoLabel}>役職:</Text>
                       <Text style={styles.staffInfoValue}>
-                        {staff.role === 'admin' ? '🔑 管理者' : '👤 スタッフ'}
+                        {staff.role === 'admin' ? '🔑 管理者' : staff.role === 'director' ? '🎬 ディレクター' : '👤 スタッフ'}
                       </Text>
                     </View>
                     <View style={styles.staffInfoRow}>
@@ -402,7 +402,7 @@ export const SettingsScreen: React.FC = () => {
                     <Text style={styles.memberName}>{member.name}</Text>
                     <Text style={styles.memberEmail}>{member.email}</Text>
                     <Text style={styles.memberRole}>
-                      {member.role === 'admin' ? '🔑 管理者' : '👤 スタッフ'}
+                      {member.role === 'admin' ? '🔑 管理者' : member.role === 'director' ? '🎬 ディレクター' : '👤 スタッフ'}
                     </Text>
                   </View>
                   <TouchableOpacity
@@ -455,6 +455,15 @@ export const SettingsScreen: React.FC = () => {
                 >
                   <Text style={[styles.roleButtonText, editForm.role === 'staff' && styles.roleButtonTextActive]}>
                     👤 スタッフ
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.roleButton, editForm.role === 'director' && styles.roleButtonActive]}
+                  onPress={() => setEditForm({ ...editForm, role: 'director' })}
+                  disabled={editingStaff?.id === user?.id}
+                >
+                  <Text style={[styles.roleButtonText, editForm.role === 'director' && styles.roleButtonTextActive]}>
+                    🎬 ディレクター
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -557,7 +566,7 @@ export const SettingsScreen: React.FC = () => {
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>役割:</Text>
             <Text style={styles.infoValue}>
-              {user?.role === 'admin' ? '管理者' : 'スタッフ'}
+              {user?.role === 'admin' ? '管理者' : user?.role === 'director' ? 'ディレクター' : 'スタッフ'}
             </Text>
           </View>
         </View>
