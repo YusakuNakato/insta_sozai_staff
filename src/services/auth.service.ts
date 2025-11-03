@@ -29,7 +29,25 @@ export const signIn = async (
     const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
 
     if (!userDoc.exists()) {
-      throw new Error('ユーザー情報が見つかりません');
+      // Firestoreにユーザー情報が存在しない場合、自動的に作成
+      console.warn('User document not found, creating new one');
+      const newUserData: Omit<User, 'id'> = {
+        name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'ユーザー',
+        role: 'staff', // デフォルトでスタッフ
+        email: firebaseUser.email || '',
+        passwordHash: '',
+        createdAt: Timestamp.now(),
+      };
+
+      await setDoc(doc(db, 'users', firebaseUser.uid), newUserData);
+
+      return {
+        user: {
+          id: firebaseUser.uid,
+          ...newUserData,
+        },
+        firebaseUser,
+      };
     }
 
     const userData = userDoc.data() as Omit<User, 'id'>;
