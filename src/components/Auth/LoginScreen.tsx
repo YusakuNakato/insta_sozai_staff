@@ -13,6 +13,15 @@ import {
 } from 'react-native';
 import { useAuth } from '../../hooks/useAuth';
 
+// Web版対応のアラート関数
+const showAlert = (title: string, message: string) => {
+  if (Platform.OS === 'web') {
+    window.alert(`${title}\n\n${message}`);
+  } else {
+    Alert.alert(title, message);
+  }
+};
+
 export const LoginScreen: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -30,15 +39,17 @@ export const LoginScreen: React.FC = () => {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('エラー', 'メールアドレスとパスワードを入力してください');
+      showAlert('エラー', 'メールアドレスとパスワードを入力してください');
       return;
     }
 
     setLoading(true);
     try {
       await signIn(email, password);
+      // ログイン成功時は自動的にAppNavigatorがメイン画面に遷移する
     } catch (error: any) {
-      Alert.alert('ログイン失敗', error.message);
+      console.error('Login error:', error);
+      showAlert('ログイン失敗', error.message);
     } finally {
       setLoading(false);
     }
@@ -46,12 +57,12 @@ export const LoginScreen: React.FC = () => {
 
   const handleSignUp = async () => {
     if (!email || !password || !name) {
-      Alert.alert('エラー', '表示名、メールアドレス、パスワードは必須です');
+      showAlert('エラー', '表示名、メールアドレス、パスワードは必須です');
       return;
     }
 
     if (password.length < 6) {
-      Alert.alert('エラー', 'パスワードは6文字以上で入力してください');
+      showAlert('エラー', 'パスワードは6文字以上で入力してください');
       return;
     }
 
@@ -67,13 +78,24 @@ export const LoginScreen: React.FC = () => {
       // 開発者モードの場合は管理者として登録
       if (devMode) {
         await signUpAsAdmin(email, password, name, additionalInfo);
-        Alert.alert('登録完了', '管理者アカウントが作成されました');
+        showAlert('登録完了', '管理者アカウントが作成されました。ログインしてください。');
       } else {
         await signUp(email, password, name, additionalInfo);
-        Alert.alert('登録完了', 'アカウントが作成されました');
+        showAlert('登録完了', 'アカウントが作成されました。ログインしてください。');
       }
+
+      // 登録成功後、ログイン画面に戻る
+      setIsSignUp(false);
+      // フォームをクリア
+      setName('');
+      setActualJobTitle('');
+      setDailyAvailableHours('');
+      setWorkingHoursStart('');
+      setWorkingHoursEnd('');
+      // メールアドレスとパスワードは残しておく（すぐログインできるように）
     } catch (error: any) {
-      Alert.alert('登録失敗', error.message);
+      console.error('Sign up error:', error);
+      showAlert('登録失敗', error.message);
     } finally {
       setLoading(false);
     }
@@ -84,7 +106,7 @@ export const LoginScreen: React.FC = () => {
 
     if (pressCount >= 4) {
       setDevMode(prev => !prev);
-      Alert.alert(
+      showAlert(
         devMode ? '通常モード' : '開発者モード',
         devMode ? '通常モードに切り替えました' : '開発者モードが有効になりました。管理者として登録できます。'
       );
