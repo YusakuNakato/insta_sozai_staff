@@ -105,18 +105,27 @@ export const signUp = async (
     const firebaseUser = userCredential.user;
 
     // Firestoreにユーザー情報を保存（デフォルトでスタッフ）
-    const userData: Omit<User, 'id'> = {
+    const userData: any = {
       name,
       role: 'staff', // デフォルトでスタッフとして登録
       email,
       passwordHash: '', // Firebase Authが管理するため空文字
       createdAt: Timestamp.now(),
-      // 追加情報
-      actualJobTitle: additionalInfo?.actualJobTitle,
-      dailyAvailableHours: additionalInfo?.dailyAvailableHours,
-      workingHoursStart: additionalInfo?.workingHoursStart,
-      workingHoursEnd: additionalInfo?.workingHoursEnd,
     };
+
+    // undefinedの値は含めない（Firestoreはundefinedを受け付けない）
+    if (additionalInfo?.actualJobTitle) {
+      userData.actualJobTitle = additionalInfo.actualJobTitle;
+    }
+    if (additionalInfo?.dailyAvailableHours) {
+      userData.dailyAvailableHours = additionalInfo.dailyAvailableHours;
+    }
+    if (additionalInfo?.workingHoursStart) {
+      userData.workingHoursStart = additionalInfo.workingHoursStart;
+    }
+    if (additionalInfo?.workingHoursEnd) {
+      userData.workingHoursEnd = additionalInfo.workingHoursEnd;
+    }
 
     await setDoc(doc(db, 'users', firebaseUser.uid), userData);
     console.log('User document created in Firestore');
@@ -170,18 +179,27 @@ export const signUpAsAdmin = async (
     const firebaseUser = userCredential.user;
 
     // Firestoreにユーザー情報を保存（管理者として）
-    const userData: Omit<User, 'id'> = {
+    const userData: any = {
       name,
       role: 'admin', // 管理者として登録
       email,
       passwordHash: '', // Firebase Authが管理するため空文字
       createdAt: Timestamp.now(),
-      // 追加情報
-      actualJobTitle: additionalInfo?.actualJobTitle,
-      dailyAvailableHours: additionalInfo?.dailyAvailableHours,
-      workingHoursStart: additionalInfo?.workingHoursStart,
-      workingHoursEnd: additionalInfo?.workingHoursEnd,
     };
+
+    // undefinedの値は含めない（Firestoreはundefinedを受け付けない）
+    if (additionalInfo?.actualJobTitle) {
+      userData.actualJobTitle = additionalInfo.actualJobTitle;
+    }
+    if (additionalInfo?.dailyAvailableHours) {
+      userData.dailyAvailableHours = additionalInfo.dailyAvailableHours;
+    }
+    if (additionalInfo?.workingHoursStart) {
+      userData.workingHoursStart = additionalInfo.workingHoursStart;
+    }
+    if (additionalInfo?.workingHoursEnd) {
+      userData.workingHoursEnd = additionalInfo.workingHoursEnd;
+    }
 
     await setDoc(doc(db, 'users', firebaseUser.uid), userData);
 
