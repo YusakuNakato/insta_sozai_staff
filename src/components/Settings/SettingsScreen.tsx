@@ -17,7 +17,6 @@ import { User, UserRole } from '../../types';
 export const SettingsScreen: React.FC = () => {
   const { user } = useAuth();
   const [showStaffManagement, setShowStaffManagement] = useState(false);
-  const [activeTab, setActiveTab] = useState<'staff' | 'members'>('staff');
 
   // メンバー関連
   const [members, setMembers] = useState<User[]>([]);
@@ -291,48 +290,69 @@ export const SettingsScreen: React.FC = () => {
         <Text style={styles.subtitle}>メンバー管理</Text>
       </View>
 
-      {/* タブ */}
-      <View style={styles.tabContainer}>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'staff' && styles.tabActive]}
-          onPress={() => setActiveTab('staff')}
-        >
-          <Text style={[styles.tabText, activeTab === 'staff' && styles.tabTextActive]}>
-            👤 メンバー管理
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'members' && styles.tabActive]}
-          onPress={() => setActiveTab('members')}
-        >
-          <Text style={[styles.tabText, activeTab === 'members' && styles.tabTextActive]}>
-            🗑️ メンバー削除
-          </Text>
-        </TouchableOpacity>
-      </View>
-
       <ScrollView style={styles.content}>
-        {/* メンバー管理タブ */}
-        {activeTab === 'staff' && (
-          <View style={styles.card}>
-            <View style={styles.cardHeader}>
-              <Text style={styles.cardTitle}>メンバー一覧（編集可能）</Text>
-              <TouchableOpacity onPress={loadMembers} disabled={loadingMembers}>
-                <Text style={styles.refreshButton}>
-                  {loadingMembers ? '更新中...' : '🔄'}
+        {/* メンバー管理 */}
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.cardTitle}>メンバー一覧</Text>
+            <TouchableOpacity onPress={loadMembers} disabled={loadingMembers}>
+              <Text style={styles.refreshButton}>
+                {loadingMembers ? '更新中...' : '🔄'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* 削除ボタン */}
+          {selectedUsersForDeletion.length > 0 && (
+            <View style={styles.bulkActionBar}>
+              <Text style={styles.bulkActionText}>
+                {selectedUsersForDeletion.length}人選択中
+              </Text>
+              <TouchableOpacity
+                style={styles.bulkDeleteButton}
+                onPress={handleDeleteUsers}
+                disabled={deletingUsers}
+              >
+                <Text style={styles.bulkDeleteButtonText}>
+                  {deletingUsers ? '削除中...' : '選択したメンバーを削除'}
                 </Text>
               </TouchableOpacity>
             </View>
+          )}
 
-            {loadingMembers ? (
-              <ActivityIndicator size="large" color="#6366f1" style={styles.loader} />
-            ) : members.length === 0 ? (
-              <Text style={styles.emptyText}>メンバーがいません</Text>
-            ) : (
-              members.map((staff) => (
-                <View key={staff.id} style={styles.staffCard}>
+          {loadingMembers ? (
+            <ActivityIndicator size="large" color="#6366f1" style={styles.loader} />
+          ) : members.length === 0 ? (
+            <Text style={styles.emptyText}>メンバーがいません</Text>
+          ) : (
+            members.map((staff) => {
+              const isSelected = selectedUsersForDeletion.includes(staff.id);
+              const isSelf = staff.id === user?.id;
+
+              return (
+                <View key={staff.id} style={[styles.staffCard, isSelected && styles.staffCardSelected]}>
                   <View style={styles.staffCardHeader}>
-                    <Text style={styles.staffCardName}>{staff.name}</Text>
+                    <View style={styles.staffCardLeft}>
+                      {/* チェックボックス */}
+                      <TouchableOpacity
+                        onPress={() => !isSelf && toggleUserSelection(staff.id)}
+                        disabled={isSelf}
+                        style={styles.checkbox}
+                      >
+                        <View style={[
+                          styles.checkboxBox,
+                          isSelected && styles.checkboxBoxChecked,
+                          isSelf && styles.checkboxBoxDisabled
+                        ]}>
+                          {isSelected && <Text style={styles.checkboxCheck}>✓</Text>}
+                        </View>
+                      </TouchableOpacity>
+
+                      <Text style={styles.staffCardName}>
+                        {staff.name} {isSelf && '(本人)'}
+                      </Text>
+                    </View>
+
                     <TouchableOpacity
                       style={styles.editButton}
                       onPress={() => handleEditStaff(staff)}
@@ -374,51 +394,10 @@ export const SettingsScreen: React.FC = () => {
                     )}
                   </View>
                 </View>
-              ))
-            )}
-          </View>
-        )}
-
-        {/* メンバー削除タブ */}
-        {activeTab === 'members' && (
-          <View style={styles.card}>
-            <View style={styles.cardHeader}>
-              <Text style={styles.cardTitle}>登録済みメンバー</Text>
-              <TouchableOpacity onPress={loadMembers} disabled={loadingMembers}>
-                <Text style={styles.refreshButton}>
-                  {loadingMembers ? '更新中...' : '🔄'}
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            {loadingMembers ? (
-              <ActivityIndicator size="large" color="#6366f1" style={styles.loader} />
-            ) : members.length === 0 ? (
-              <Text style={styles.emptyText}>メンバーがいません</Text>
-            ) : (
-              members.map((member) => (
-                <View key={member.id} style={styles.memberItem}>
-                  <View style={styles.memberInfo}>
-                    <Text style={styles.memberName}>{member.name}</Text>
-                    <Text style={styles.memberEmail}>{member.email}</Text>
-                    <Text style={styles.memberRole}>
-                      {member.role === 'admin' ? '🔑 管理者' : member.role === 'director' ? '🎬 ディレクター' : '👤 スタッフ'}
-                    </Text>
-                  </View>
-                  <TouchableOpacity
-                    style={[styles.deleteButton, member.id === user?.id && styles.deleteButtonDisabled]}
-                    onPress={() => handleDeleteMember(member.id, member.name)}
-                    disabled={member.id === user?.id}
-                  >
-                    <Text style={styles.deleteButtonText}>
-                      {member.id === user?.id ? '本人' : '削除'}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              ))
-            )}
-          </View>
-        )}
+              );
+            })
+          )}
+        </View>
       </ScrollView>
 
       {/* スタッフ編集モーダル */}
@@ -747,16 +726,78 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e5e7eb',
   },
+  staffCardSelected: {
+    backgroundColor: '#eff6ff',
+    borderColor: '#6366f1',
+    borderWidth: 2,
+  },
   staffCardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 12,
   },
+  staffCardLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  checkbox: {
+    marginRight: 12,
+  },
+  checkboxBox: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: '#d1d5db',
+    backgroundColor: '#ffffff',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkboxBoxChecked: {
+    backgroundColor: '#6366f1',
+    borderColor: '#6366f1',
+  },
+  checkboxBoxDisabled: {
+    backgroundColor: '#f3f4f6',
+    borderColor: '#e5e7eb',
+  },
+  checkboxCheck: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
   staffCardName: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#1f2937',
+    flex: 1,
+  },
+  bulkActionBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#eff6ff',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  bulkActionText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1e40af',
+  },
+  bulkDeleteButton: {
+    backgroundColor: '#ef4444',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+  },
+  bulkDeleteButtonText: {
+    color: '#ffffff',
+    fontSize: 13,
+    fontWeight: '600',
   },
   editButton: {
     backgroundColor: '#6366f1',
