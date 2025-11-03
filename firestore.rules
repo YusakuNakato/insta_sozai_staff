@@ -6,6 +6,9 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == userId;
       // 認証済みユーザーは全ユーザーの情報を読み取り可能（役割チェックのため）
       allow read: if request.auth != null;
+      // 管理者は全てのユーザードキュメントを削除・更新可能
+      allow write: if request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
     match /taskReports/{reportId} {
