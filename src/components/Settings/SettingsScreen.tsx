@@ -9,10 +9,26 @@ import {
   ActivityIndicator,
   TextInput,
   Modal,
+  Platform,
 } from 'react-native';
 import { useAuth } from '../../hooks/useAuth';
 import { getAllUsers, deleteUser, updateUser } from '../../services/user.service';
 import { User, UserRole } from '../../types';
+
+// Web版対応のアラート関数
+const showAlert = (title: string, message: string, buttons?: Array<{ text: string; onPress?: () => void; style?: 'default' | 'cancel' | 'destructive' }>) => {
+  if (Platform.OS === 'web') {
+    const result = window.confirm(`${title}\n\n${message}`);
+    if (result && buttons) {
+      const confirmButton = buttons.find(b => b.style === 'destructive' || b.text === '削除' || b.text === 'OK');
+      if (confirmButton?.onPress) {
+        confirmButton.onPress();
+      }
+    }
+  } else {
+    Alert.alert(title, message, buttons as any);
+  }
+};
 
 export const SettingsScreen: React.FC = () => {
   const { user } = useAuth();
@@ -60,11 +76,11 @@ export const SettingsScreen: React.FC = () => {
 
   const handleDeleteMember = async (memberId: string, memberName: string) => {
     if (memberId === user?.id) {
-      Alert.alert('エラー', '自分自身を削除することはできません');
+      showAlert('エラー', '自分自身を削除することはできません');
       return;
     }
 
-    Alert.alert(
+    showAlert(
       'メンバー削除',
       `${memberName} を削除してもよろしいですか？\n\nこの操作は取り消せません。`,
       [
@@ -75,10 +91,10 @@ export const SettingsScreen: React.FC = () => {
           onPress: async () => {
             try {
               await deleteUser(memberId);
-              Alert.alert('成功', `${memberName} を削除しました`);
+              showAlert('成功', `${memberName} を削除しました`);
               loadMembers();
             } catch (error: any) {
-              Alert.alert('エラー', error.message);
+              showAlert('エラー', error.message);
             }
           },
         },
@@ -102,13 +118,13 @@ export const SettingsScreen: React.FC = () => {
     if (!editingStaff) return;
 
     if (!editForm.name.trim()) {
-      Alert.alert('エラー', '表示名は必須です');
+      showAlert('エラー', '表示名は必須です');
       return;
     }
 
     // 自分自身の役職を変更しようとしている場合は警告
     if (editingStaff.id === user?.id && editForm.role !== editingStaff.role) {
-      Alert.alert('警告', '自分自身の役職を変更することはできません');
+      showAlert('警告', '自分自身の役職を変更することはできません');
       return;
     }
 
@@ -124,11 +140,11 @@ export const SettingsScreen: React.FC = () => {
       };
 
       await updateUser(editingStaff.id, updates);
-      Alert.alert('✅ 更新完了', 'メンバー情報を更新しました');
+      showAlert('✅ 更新完了', 'メンバー情報を更新しました');
       setEditingStaff(null);
       loadMembers();
     } catch (error: any) {
-      Alert.alert('エラー', error.message);
+      showAlert('エラー', error.message);
     } finally {
       setSaving(false);
     }
@@ -137,20 +153,20 @@ export const SettingsScreen: React.FC = () => {
   // ユーザー削除処理
   const handleDeleteUsers = async () => {
     if (selectedUsersForDeletion.length === 0) {
-      Alert.alert('エラー', '削除するユーザーを選択してください');
+      showAlert('エラー', '削除するユーザーを選択してください');
       return;
     }
 
     // 自分自身が含まれていないかチェック
     if (selectedUsersForDeletion.includes(user?.id || '')) {
-      Alert.alert('エラー', '自分自身を削除することはできません');
+      showAlert('エラー', '自分自身を削除することはできません');
       return;
     }
 
     const selectedUsers = members.filter(m => selectedUsersForDeletion.includes(m.id));
     const userNames = selectedUsers.map(u => u.name).join(', ');
 
-    Alert.alert(
+    showAlert(
       'ユーザー削除',
       `以下のユーザーを削除してもよろしいですか？\n\n${userNames}\n\nこの操作は取り消せません。`,
       [
@@ -164,12 +180,12 @@ export const SettingsScreen: React.FC = () => {
               await Promise.all(
                 selectedUsersForDeletion.map(userId => deleteUser(userId))
               );
-              Alert.alert('成功', `${selectedUsersForDeletion.length}人のユーザーを削除しました`);
+              showAlert('成功', `${selectedUsersForDeletion.length}人のユーザーを削除しました`);
               setSelectedUsersForDeletion([]);
               setShowDeleteUserModal(false);
               loadMembers();
             } catch (error: any) {
-              Alert.alert('エラー', error.message);
+              showAlert('エラー', error.message);
             } finally {
               setDeletingUsers(false);
             }
