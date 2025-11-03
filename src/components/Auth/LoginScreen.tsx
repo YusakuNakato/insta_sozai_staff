@@ -253,19 +253,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 40,
   },
-  inviteNotice: {
-    backgroundColor: '#FFF3CD',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#FFE69C',
-  },
-  inviteNoticeText: {
-    fontSize: 13,
-    color: '#856404',
-    textAlign: 'center',
-  },
   devModeNotice: {
     backgroundColor: '#E0F2FE',
     padding: 12,
