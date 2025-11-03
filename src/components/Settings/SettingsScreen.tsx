@@ -130,14 +130,25 @@ export const SettingsScreen: React.FC = () => {
 
     setSaving(true);
     try {
+      // undefinedの値を含めない（Firestoreはundefinedを受け付けない）
       const updates: any = {
         name: editForm.name.trim(),
         role: editForm.role,
-        actualJobTitle: editForm.actualJobTitle.trim() || undefined,
-        dailyAvailableHours: editForm.dailyAvailableHours ? parseFloat(editForm.dailyAvailableHours) : undefined,
-        workingHoursStart: editForm.workingHoursStart.trim() || undefined,
-        workingHoursEnd: editForm.workingHoursEnd.trim() || undefined,
       };
+
+      // オプションフィールドは値がある場合のみ追加
+      if (editForm.actualJobTitle.trim()) {
+        updates.actualJobTitle = editForm.actualJobTitle.trim();
+      }
+      if (editForm.dailyAvailableHours) {
+        updates.dailyAvailableHours = parseFloat(editForm.dailyAvailableHours);
+      }
+      if (editForm.workingHoursStart.trim()) {
+        updates.workingHoursStart = editForm.workingHoursStart.trim();
+      }
+      if (editForm.workingHoursEnd.trim()) {
+        updates.workingHoursEnd = editForm.workingHoursEnd.trim();
+      }
 
       await updateUser(editingStaff.id, updates);
       showAlert('✅ 更新完了', 'メンバー情報を更新しました');

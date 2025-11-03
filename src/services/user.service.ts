@@ -66,8 +66,16 @@ export async function updateUser(
   updates: Partial<Omit<User, 'id' | 'email' | 'createdAt' | 'passwordHash'>>
 ): Promise<void> {
   try {
+    // undefinedの値を除外（Firestoreはundefinedを受け付けない）
+    const cleanedUpdates: any = {};
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value !== undefined) {
+        cleanedUpdates[key] = value;
+      }
+    });
+
     const userRef = doc(db, 'users', userId);
-    await updateDoc(userRef, updates);
+    await updateDoc(userRef, cleanedUpdates);
   } catch (error) {
     console.error('Error updating user:', error);
     throw error;
