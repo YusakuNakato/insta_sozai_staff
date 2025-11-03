@@ -42,7 +42,26 @@ export const signIn = async (
       firebaseUser,
     };
   } catch (error: any) {
-    throw new Error(`ログインに失敗しました: ${error.message}`);
+    console.error('Sign in error:', error);
+
+    // Firebaseエラーコードを日本語化
+    let errorMessage = 'ログインに失敗しました';
+
+    if (error.code === 'auth/user-not-found') {
+      errorMessage = 'このメールアドレスは登録されていません。新規登録してください。';
+    } else if (error.code === 'auth/wrong-password') {
+      errorMessage = 'パスワードが間違っています。';
+    } else if (error.code === 'auth/invalid-email') {
+      errorMessage = 'メールアドレスの形式が正しくありません。';
+    } else if (error.code === 'auth/user-disabled') {
+      errorMessage = 'このアカウントは無効化されています。管理者にお問い合わせください。';
+    } else if (error.code === 'auth/invalid-credential') {
+      errorMessage = 'メールアドレスまたはパスワードが間違っています。';
+    } else if (error.message) {
+      errorMessage = `ログインに失敗しました: ${error.message}`;
+    }
+
+    throw new Error(errorMessage);
   }
 };
 
@@ -93,7 +112,23 @@ export const signUp = async (
     };
   } catch (error: any) {
     console.error('Sign up error:', error);
-    throw new Error(`ユーザー登録に失敗しました: ${error.message}`);
+
+    // Firebaseエラーコードを日本語化
+    let errorMessage = 'ユーザー登録に失敗しました';
+
+    if (error.code === 'auth/email-already-in-use') {
+      errorMessage = 'このメールアドレスは既に登録されています。ログイン画面からログインしてください。';
+    } else if (error.code === 'auth/invalid-email') {
+      errorMessage = 'メールアドレスの形式が正しくありません。';
+    } else if (error.code === 'auth/operation-not-allowed') {
+      errorMessage = 'メール/パスワード認証が有効になっていません。管理者にお問い合わせください。';
+    } else if (error.code === 'auth/weak-password') {
+      errorMessage = 'パスワードが弱すぎます。もっと強力なパスワードを設定してください。';
+    } else if (error.message) {
+      errorMessage = `ユーザー登録に失敗しました: ${error.message}`;
+    }
+
+    throw new Error(errorMessage);
   }
 };
 
@@ -140,7 +175,24 @@ export const signUpAsAdmin = async (
       firebaseUser,
     };
   } catch (error: any) {
-    throw new Error(`管理者登録に失敗しました: ${error.message}`);
+    console.error('Admin sign up error:', error);
+
+    // Firebaseエラーコードを日本語化
+    let errorMessage = '管理者登録に失敗しました';
+
+    if (error.code === 'auth/email-already-in-use') {
+      errorMessage = 'このメールアドレスは既に登録されています。ログイン画面からログインしてください。';
+    } else if (error.code === 'auth/invalid-email') {
+      errorMessage = 'メールアドレスの形式が正しくありません。';
+    } else if (error.code === 'auth/operation-not-allowed') {
+      errorMessage = 'メール/パスワード認証が有効になっていません。管理者にお問い合わせください。';
+    } else if (error.code === 'auth/weak-password') {
+      errorMessage = 'パスワードが弱すぎます。もっと強力なパスワードを設定してください。';
+    } else if (error.message) {
+      errorMessage = `管理者登録に失敗しました: ${error.message}`;
+    }
+
+    throw new Error(errorMessage);
   }
 };
 
