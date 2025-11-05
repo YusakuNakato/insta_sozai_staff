@@ -18,7 +18,7 @@ export interface User {
 
 export type TaskType = 'create' | 'fix';
 
-export type AccountName = 'さきAI' | 'たくむAIお兄さん' | 'れもん' | 'みさを' | 'みゆ';
+export type AccountName = 'さきAI' | 'たくむAIお兄さん' | 'れもん' | 'みさを' | 'みゆ' | 'さき' | 'ビジ系たくむ' | 'ぽよさや';
 
 export type QualityScore = '-' | 1 | 2 | 3 | 4 | 5;
 

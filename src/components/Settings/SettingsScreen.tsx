@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useAuth } from '../../hooks/useAuth';
 import { getAllUsers, deleteUser, updateUser } from '../../services/user.service';
+import { signUp } from '../../services/auth.service';
 import { User, UserRole } from '../../types';
 
 // Web版対応のアラート関数
@@ -54,6 +55,20 @@ export const SettingsScreen: React.FC = () => {
   const [showDeleteUserModal, setShowDeleteUserModal] = useState(false);
   const [selectedUsersForDeletion, setSelectedUsersForDeletion] = useState<string[]>([]);
   const [deletingUsers, setDeletingUsers] = useState(false);
+
+  // メンバー追加モーダル関連
+  const [showAddMemberModal, setShowAddMemberModal] = useState(false);
+  const [addMemberForm, setAddMemberForm] = useState({
+    email: '',
+    password: '',
+    name: '',
+    role: 'staff' as UserRole,
+    actualJobTitle: '',
+    dailyAvailableHours: '',
+    workingHoursStart: '',
+    workingHoursEnd: '',
+  });
+  const [addingMember, setAddingMember] = useState(false);
 
   useEffect(() => {
     // 管理者かつスタッフ管理画面の場合はデータ読み込み
@@ -215,6 +230,206 @@ export const SettingsScreen: React.FC = () => {
     }
   };
 
+  // メンバー追加処理
+  const handleAddMember = async () => {
+    if (!addMemberForm.email.trim() || !addMemberForm.password.trim() || !addMemberForm.name.trim()) {
+      showAlert('エラー', 'メールアドレス、パスワード、表示名は必須です');
+      return;
+    }
+
+    setAddingMember(true);
+    try {
+      const additionalInfo = {
+        actualJobTitle: addMemberForm.actualJobTitle.trim() || undefined,
+        dailyAvailableHours: addMemberForm.dailyAvailableHours ? parseFloat(addMemberForm.dailyAvailableHours) : undefined,
+        workingHoursStart: addMemberForm.workingHoursStart.trim() || undefined,
+        workingHoursEnd: addMemberForm.workingHoursEnd.trim() || undefined,
+      };
+
+      // 新規メンバーを登録
+      await signUp(
+        addMemberForm.email.trim(),
+        addMemberForm.password,
+        addMemberForm.name.trim(),
+        additionalInfo
+      );
+
+      showAlert('成功', `${addMemberForm.name} を追加しました。\n\n注意: 追加後、管理者は自動的にログアウトされます。再度ログインしてください。`);
+
+      // フォームをリセット
+      setAddMemberForm({
+        email: '',
+        password: '',
+        name: '',
+        role: 'staff',
+        actualJobTitle: '',
+        dailyAvailableHours: '',
+        workingHoursStart: '',
+        workingHoursEnd: '',
+      });
+      setShowAddMemberModal(false);
+
+      // メンバーリストを更新
+      loadMembers();
+    } catch (error: any) {
+      showAlert('エラー', error.message);
+    } finally {
+      setAddingMember(false);
+    }
+  };
+
+  // メンバー追加モーダル
+  const renderAddMemberModal = () => (
+    <Modal
+      visible={showAddMemberModal}
+      transparent={true}
+      animationType="slide"
+      onRequestClose={() => {
+        setShowAddMemberModal(false);
+        setAddMemberForm({
+          email: '',
+          password: '',
+          name: '',
+          role: 'staff',
+          actualJobTitle: '',
+          dailyAvailableHours: '',
+          workingHoursStart: '',
+          workingHoursEnd: '',
+        });
+      }}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContent}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>新規メンバー追加</Text>
+            <TouchableOpacity onPress={() => {
+              setShowAddMemberModal(false);
+              setAddMemberForm({
+                email: '',
+                password: '',
+                name: '',
+                role: 'staff',
+                actualJobTitle: '',
+                dailyAvailableHours: '',
+                workingHoursStart: '',
+                workingHoursEnd: '',
+              });
+            }}>
+              <Text style={styles.closeButton}>✕</Text>
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView style={styles.modalBody}>
+            <Text style={styles.warningText}>
+              ⚠️ 注意: メンバー追加後、管理者は自動的にログアウトされます。再度ログインしてください。
+            </Text>
+
+            <Text style={styles.modalLabel}>メールアドレス *</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="example@example.com"
+              value={addMemberForm.email}
+              onChangeText={(text) => setAddMemberForm({ ...addMemberForm, email: text })}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+
+            <Text style={styles.modalLabel}>パスワード *</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="パスワード（6文字以上）"
+              value={addMemberForm.password}
+              onChangeText={(text) => setAddMemberForm({ ...addMemberForm, password: text })}
+              secureTextEntry
+            />
+
+            <Text style={styles.modalLabel}>表示名 *</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="表示名（スタッフ名）"
+              value={addMemberForm.name}
+              onChangeText={(text) => setAddMemberForm({ ...addMemberForm, name: text })}
+            />
+
+            <Text style={styles.modalLabel}>役職</Text>
+            <View style={styles.roleSelector}>
+              <TouchableOpacity
+                style={[styles.roleButton, addMemberForm.role === 'staff' && styles.roleButtonActive]}
+                onPress={() => setAddMemberForm({ ...addMemberForm, role: 'staff' })}
+              >
+                <Text style={[styles.roleButtonText, addMemberForm.role === 'staff' && styles.roleButtonTextActive]}>
+                  👤 スタッフ
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.roleButton, addMemberForm.role === 'director' && styles.roleButtonActive]}
+                onPress={() => setAddMemberForm({ ...addMemberForm, role: 'director' })}
+              >
+                <Text style={[styles.roleButtonText, addMemberForm.role === 'director' && styles.roleButtonTextActive]}>
+                  🎬 ディレクター
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.roleButton, addMemberForm.role === 'admin' && styles.roleButtonActive]}
+                onPress={() => setAddMemberForm({ ...addMemberForm, role: 'admin' })}
+              >
+                <Text style={[styles.roleButtonText, addMemberForm.role === 'admin' && styles.roleButtonTextActive]}>
+                  🔑 管理者
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.modalLabel}>本職の表示名</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="例：デザイナー、エンジニア"
+              value={addMemberForm.actualJobTitle}
+              onChangeText={(text) => setAddMemberForm({ ...addMemberForm, actualJobTitle: text })}
+            />
+
+            <Text style={styles.modalLabel}>1日の稼働可能時間数</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="例：8"
+              value={addMemberForm.dailyAvailableHours}
+              onChangeText={(text) => setAddMemberForm({ ...addMemberForm, dailyAvailableHours: text })}
+              keyboardType="decimal-pad"
+            />
+
+            <Text style={styles.modalLabel}>稼働時間帯</Text>
+            <View style={styles.timeRow}>
+              <TextInput
+                style={[styles.modalInput, styles.timeInput]}
+                placeholder="開始（例：09:00）"
+                value={addMemberForm.workingHoursStart}
+                onChangeText={(text) => setAddMemberForm({ ...addMemberForm, workingHoursStart: text })}
+              />
+              <Text style={styles.timeSeparator}>〜</Text>
+              <TextInput
+                style={[styles.modalInput, styles.timeInput]}
+                placeholder="終了（例：18:00）"
+                value={addMemberForm.workingHoursEnd}
+                onChangeText={(text) => setAddMemberForm({ ...addMemberForm, workingHoursEnd: text })}
+              />
+            </View>
+
+            <TouchableOpacity
+              style={[styles.saveButton, addingMember && styles.saveButtonDisabled]}
+              onPress={handleAddMember}
+              disabled={addingMember}
+            >
+              {addingMember ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.saveButtonText}>メンバーを追加</Text>
+              )}
+            </TouchableOpacity>
+          </ScrollView>
+        </View>
+      </View>
+    </Modal>
+  );
+
   // ユーザー削除モーダル
   const renderDeleteUserModal = () => (
     <Modal
@@ -312,6 +527,8 @@ export const SettingsScreen: React.FC = () => {
   if (showStaffManagement && user?.role === 'admin') {
     return (
     <View style={styles.container}>
+      {renderAddMemberModal()}
+
       <View style={styles.header}>
         <Text style={styles.title}>⚙️ 設定</Text>
         <Text style={styles.subtitle}>メンバー管理</Text>
@@ -328,6 +545,14 @@ export const SettingsScreen: React.FC = () => {
               </Text>
             </TouchableOpacity>
           </View>
+
+          {/* メンバー追加ボタン */}
+          <TouchableOpacity
+            style={styles.addMemberButton}
+            onPress={() => setShowAddMemberModal(true)}
+          >
+            <Text style={styles.addMemberButtonText}>+ 新規メンバーを追加</Text>
+          </TouchableOpacity>
 
           {/* 削除ボタン */}
           {selectedUsersForDeletion.length > 0 && (
@@ -1082,5 +1307,17 @@ const styles = StyleSheet.create({
     color: '#f59e0b',
     marginTop: 4,
     marginBottom: 12,
+  },
+  addMemberButton: {
+    backgroundColor: '#10b981',
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  addMemberButtonText: {
+    color: '#ffffff',
+    fontSize: 15,
+    fontWeight: '600',
   },
 });

@@ -22,6 +22,9 @@ const ACCOUNT_NAMES: AccountName[] = [
   'れもん',
   'みさを',
   'みゆ',
+  'さき',
+  'ビジ系たくむ',
+  'ぽよさや',
 ];
 
 export const TaskReportForm: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) => {
@@ -328,13 +331,14 @@ export const TaskReportForm: React.FC<{ onSuccess?: () => void }> = ({ onSuccess
                 <Text style={styles.label}>時間</Text>
                 <TextInput
                   style={styles.durationInput}
-                  placeholder="2.5"
+                  placeholder=""
                   value={task.durationHrs > 0 ? String(task.durationHrs) : ''}
                   onChangeText={(value) => {
                     const num = parseFloat(value) || 0;
                     updateTask(index, 'durationHrs', num);
                   }}
                   keyboardType="decimal-pad"
+                  editable={true}
                 />
               </View>
 
@@ -376,7 +380,7 @@ export const TaskReportForm: React.FC<{ onSuccess?: () => void }> = ({ onSuccess
                   <Text style={styles.label}>所要時間（時間）</Text>
                   <TextInput
                     style={styles.researchHoursInput}
-                    placeholder="1.5"
+                    placeholder=""
                     value={ownResearchHours > 0 ? String(ownResearchHours) : ''}
                     onChangeText={(value) => setOwnResearchHours(parseFloat(value) || 0)}
                     keyboardType="decimal-pad"
@@ -402,7 +406,7 @@ export const TaskReportForm: React.FC<{ onSuccess?: () => void }> = ({ onSuccess
                   <Text style={styles.label}>所要時間（時間）</Text>
                   <TextInput
                     style={styles.researchHoursInput}
-                    placeholder="1.5"
+                    placeholder=""
                     value={competitorResearchHours > 0 ? String(competitorResearchHours) : ''}
                     onChangeText={(value) => setCompetitorResearchHours(parseFloat(value) || 0)}
                     keyboardType="decimal-pad"
