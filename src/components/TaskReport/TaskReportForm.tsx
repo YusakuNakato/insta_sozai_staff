@@ -98,6 +98,14 @@ export const TaskReportForm: React.FC<{ onSuccess?: () => void }> = ({ onSuccess
     return `${year}/${month}/${day}`;
   };
 
+  // ローカルタイムゾーンで日付をYYYY-MM-DD形式にフォーマット（Web date input用）
+  const formatDateForInput = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   const handleSubmit = async () => {
     if (!user) {
       Alert.alert('エラー', 'ログインしてください');
@@ -168,9 +176,11 @@ export const TaskReportForm: React.FC<{ onSuccess?: () => void }> = ({ onSuccess
           {Platform.OS === 'web' ? (
             <input
               type="date"
-              value={reportDate.toISOString().split('T')[0]}
+              value={formatDateForInput(reportDate)}
               onChange={(e) => {
-                const newDate = new Date(e.target.value);
+                // ローカルタイムゾーンで日付を作成
+                const [year, month, day] = e.target.value.split('-').map(Number);
+                const newDate = new Date(year, month - 1, day);
                 setReportDate(newDate);
               }}
               style={{
@@ -252,9 +262,11 @@ export const TaskReportForm: React.FC<{ onSuccess?: () => void }> = ({ onSuccess
                 {Platform.OS === 'web' ? (
                   <input
                     type="date"
-                    value={task.scheduledDate.toISOString().split('T')[0]}
+                    value={formatDateForInput(task.scheduledDate)}
                     onChange={(e) => {
-                      const newDate = new Date(e.target.value);
+                      // ローカルタイムゾーンで日付を作成
+                      const [year, month, day] = e.target.value.split('-').map(Number);
+                      const newDate = new Date(year, month - 1, day);
                       updateTask(index, 'scheduledDate', newDate);
                     }}
                     style={{
