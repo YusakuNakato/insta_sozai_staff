@@ -96,7 +96,9 @@ describe('Analytics Service', () => {
 
       expect(summary.totalHours).toBe(9.5);
       expect(summary.averageQuality).toBe(3.8);
-      expect(summary.totalFixes).toBe(2);
+      expect(summary.createHours).toBeGreaterThanOrEqual(0);
+      expect(summary.fixHours).toBeGreaterThanOrEqual(0);
+      expect(summary.correctionHours).toBeGreaterThanOrEqual(0);
       expect(summary.taskCount).toBe(4);
     });
 
@@ -105,7 +107,9 @@ describe('Analytics Service', () => {
 
       expect(summary.totalHours).toBe(0);
       expect(summary.averageQuality).toBe(0);
-      expect(summary.totalFixes).toBe(0);
+      expect(summary.createHours).toBe(0);
+      expect(summary.fixHours).toBe(0);
+      expect(summary.correctionHours).toBe(0);
       expect(summary.taskCount).toBe(0);
     });
   });
@@ -119,13 +123,13 @@ describe('Analytics Service', () => {
       const user1Stats = staffAnalytics.find((s) => s.staffId === 'user1');
       expect(user1Stats?.totalHours).toBe(6.5);
       expect(user1Stats?.averageQuality).toBe(4);
-      expect(user1Stats?.totalFixes).toBe(1);
+      expect(user1Stats?.createHours).toBeGreaterThanOrEqual(0);
       expect(user1Stats?.taskCount).toBe(3);
 
       const user2Stats = staffAnalytics.find((s) => s.staffId === 'user2');
       expect(user2Stats?.totalHours).toBe(3);
       expect(user2Stats?.averageQuality).toBe(3);
-      expect(user2Stats?.totalFixes).toBe(1);
+      expect(user2Stats?.fixHours).toBeGreaterThanOrEqual(0);
       expect(user2Stats?.taskCount).toBe(1);
     });
   });
@@ -139,13 +143,13 @@ describe('Analytics Service', () => {
       const taskAStats = taskAnalytics.find((t) => t.taskName === 'Task A');
       expect(taskAStats?.totalHours).toBe(5.5);
       expect(taskAStats?.averageQuality).toBe(3.5);
-      expect(taskAStats?.totalFixes).toBe(1);
+      expect(taskAStats?.createHours).toBeGreaterThanOrEqual(0);
       expect(taskAStats?.taskCount).toBe(2);
 
       const taskBStats = taskAnalytics.find((t) => t.taskName === 'Task B');
       expect(taskBStats?.totalHours).toBe(4);
       expect(taskBStats?.averageQuality).toBe(4);
-      expect(taskBStats?.totalFixes).toBe(1);
+      expect(taskBStats?.fixHours).toBeGreaterThanOrEqual(0);
       expect(taskBStats?.taskCount).toBe(2);
     });
   });

@@ -2,10 +2,11 @@ import { TaskReport, StaffAnalytics, TaskAnalytics, TaskItem } from '../types';
 
 type MetricAccumulator = {
   totalHours: number;
+  createHours: number;
+  fixHours: number;
+  correctionHours: number;
   qualitySum: number;
   qualityCount: number;
-  totalFixes: number;
-  totalCorrections: number;
   taskCount: number;
 };
 
@@ -17,31 +18,33 @@ const aggregateTaskMetrics = (tasks: TaskItem[]): MetricAccumulator => {
       const duration = typeof task.durationHrs === 'number' ? task.durationHrs : 0;
       acc.totalHours += duration;
 
+      // 区分別に時間を集計
+      if (task.taskType === 'create') {
+        acc.createHours += duration;
+      } else if (task.taskType === 'fix') {
+        acc.fixHours += duration;
+      } else if (task.taskType === 'correction') {
+        acc.correctionHours += duration;
+      }
+
       if (typeof task.qualityScore === 'number') {
         acc.qualitySum += task.qualityScore;
         acc.qualityCount += 1;
       }
 
-      if (task.taskType === 'fix') {
-        acc.totalFixes += 1;
-      }
-
-      if (typeof task.correctionCount === 'number') {
-        acc.totalCorrections += task.correctionCount;
-      }
-
       acc.taskCount += 1;
       return acc;
     },
-    { totalHours: 0, qualitySum: 0, qualityCount: 0, totalFixes: 0, totalCorrections: 0, taskCount: 0 }
+    { totalHours: 0, createHours: 0, fixHours: 0, correctionHours: 0, qualitySum: 0, qualityCount: 0, taskCount: 0 }
   );
 };
 
-const toAnalyticsData = ({ totalHours, qualitySum, qualityCount, totalFixes, totalCorrections, taskCount }: MetricAccumulator) => ({
+const toAnalyticsData = ({ totalHours, createHours, fixHours, correctionHours, qualitySum, qualityCount, taskCount }: MetricAccumulator) => ({
   totalHours: round1Decimal(totalHours),
+  createHours: round1Decimal(createHours),
+  fixHours: round1Decimal(fixHours),
+  correctionHours: round1Decimal(correctionHours),
   averageQuality: qualityCount > 0 ? round1Decimal(qualitySum / qualityCount) : 0,
-  totalFixes,
-  totalCorrections,
   taskCount,
 });
 
@@ -90,9 +93,10 @@ export const calculateSummary = (reports: TaskReport[]) => {
   if (reports.length === 0) {
     return {
       totalHours: 0,
+      createHours: 0,
+      fixHours: 0,
+      correctionHours: 0,
       averageQuality: 0,
-      totalFixes: 0,
-      totalCorrections: 0,
       taskCount: 0,
     };
   }

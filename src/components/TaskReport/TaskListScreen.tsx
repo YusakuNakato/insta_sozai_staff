@@ -115,11 +115,8 @@ export const TaskListScreen: React.FC = () => {
                   <View style={styles.taskRight}>
                     <Text style={styles.taskHours}>{task.durationHrs}h</Text>
                     <Text style={styles.taskType}>
-                      {task.taskType === 'create' ? '作成' : '修正'}
+                      {task.taskType === 'create' ? '作成' : task.taskType === 'fix' ? '修正' : '添削'}
                     </Text>
-                    {task.correctionCount !== undefined && task.correctionCount > 0 && (
-                      <Text style={styles.correctionCount}>添削: {task.correctionCount}回</Text>
-                    )}
                   </View>
                 </View>
               ))}
@@ -274,11 +271,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 8,
-  },
-  correctionCount: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#FF9500',
   },
   totalSection: {
     flexDirection: 'row',

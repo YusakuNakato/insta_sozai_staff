@@ -99,20 +99,25 @@ export const AnalyticsDashboard: React.FC = () => {
           </View>
 
           <View style={styles.summaryCard}>
+            <Text style={styles.summaryValue}>{summary.createHours}</Text>
+            <Text style={styles.summaryLabel}>作成時間</Text>
+          </View>
+
+          <View style={styles.summaryCard}>
+            <Text style={styles.summaryValue}>{summary.fixHours}</Text>
+            <Text style={styles.summaryLabel}>修正時間</Text>
+          </View>
+
+          <View style={styles.summaryCard}>
+            <Text style={styles.summaryValue}>{summary.correctionHours}</Text>
+            <Text style={styles.summaryLabel}>添削時間</Text>
+          </View>
+
+          <View style={styles.summaryCard}>
             <Text style={styles.summaryValue}>
               {summary.averageQuality > 0 ? summary.averageQuality : 'N/A'}
             </Text>
             <Text style={styles.summaryLabel}>平均品質</Text>
-          </View>
-
-          <View style={styles.summaryCard}>
-            <Text style={styles.summaryValue}>{summary.totalFixes}</Text>
-            <Text style={styles.summaryLabel}>総修正回数</Text>
-          </View>
-
-          <View style={styles.summaryCard}>
-            <Text style={styles.summaryValue}>{summary.totalCorrections}</Text>
-            <Text style={styles.summaryLabel}>総添削回数</Text>
           </View>
 
           <View style={styles.summaryCard}>
@@ -162,22 +167,26 @@ export const AnalyticsDashboard: React.FC = () => {
           <View key={index} style={styles.detailCard}>
             <Text style={styles.detailTitle}>{task.taskName}</Text>
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>稼働時間:</Text>
+              <Text style={styles.detailLabel}>総稼働時間:</Text>
               <Text style={styles.detailValue}>{task.totalHours}h</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>作成時間:</Text>
+              <Text style={styles.detailValue}>{task.createHours}h</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>修正時間:</Text>
+              <Text style={styles.detailValue}>{task.fixHours}h</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>添削時間:</Text>
+              <Text style={styles.detailValue}>{task.correctionHours}h</Text>
             </View>
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>平均品質:</Text>
               <Text style={styles.detailValue}>
                 {task.averageQuality > 0 ? task.averageQuality : 'N/A'}
               </Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>修正回数:</Text>
-              <Text style={styles.detailValue}>{task.totalFixes}回</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>添削回数:</Text>
-              <Text style={styles.detailValue}>{task.totalCorrections}回</Text>
             </View>
           </View>
         ))}

@@ -323,7 +323,7 @@ export const TaskReportForm: React.FC<{ onSuccess?: () => void }> = ({ onSuccess
               </View>
             </View>
 
-            {/* 区分・所要時間・添削・完了チェックを横並び */}
+            {/* 区分・所要時間・完了チェックを横並び */}
             <View style={styles.compactRow}>
               <View style={styles.taskTypeContainer}>
                 <Text style={styles.label}>区分</Text>
@@ -335,6 +335,7 @@ export const TaskReportForm: React.FC<{ onSuccess?: () => void }> = ({ onSuccess
                   >
                     <Picker.Item label="作成" value="create" />
                     <Picker.Item label="修正" value="fix" />
+                    <Picker.Item label="添削" value="correction" />
                   </Picker>
                 </View>
               </View>
@@ -350,21 +351,6 @@ export const TaskReportForm: React.FC<{ onSuccess?: () => void }> = ({ onSuccess
                     updateTask(index, 'durationHrs', num);
                   }}
                   keyboardType="decimal-pad"
-                  editable={true}
-                />
-              </View>
-
-              <View style={styles.correctionContainer}>
-                <Text style={styles.label}>添削</Text>
-                <TextInput
-                  style={styles.correctionInput}
-                  placeholder=""
-                  value={task.correctionCount !== undefined && task.correctionCount > 0 ? String(task.correctionCount) : ''}
-                  onChangeText={(value) => {
-                    const num = parseInt(value) || 0;
-                    updateTask(index, 'correctionCount', num);
-                  }}
-                  keyboardType="number-pad"
                   editable={true}
                 />
               </View>
@@ -624,9 +610,6 @@ const styles = StyleSheet.create({
   durationContainer: {
     flex: 1,
   },
-  correctionContainer: {
-    flex: 1,
-  },
   completedOuterContainer: {
     flex: 1.5,
     alignItems: 'flex-end',
@@ -688,17 +671,6 @@ const styles = StyleSheet.create({
     height: 38,
   },
   durationInput: {
-    backgroundColor: '#F9F9F9',
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderRadius: 6,
-    fontSize: 14,
-    borderWidth: 1,
-    borderColor: '#DDD',
-    minHeight: 38,
-    textAlign: 'center',
-  },
-  correctionInput: {
     backgroundColor: '#F9F9F9',
     paddingHorizontal: 10,
     paddingVertical: 8,

@@ -16,7 +16,7 @@ export interface User {
   workingHoursEnd?: string;         // 稼働時間帯（終了）例: "18:00"
 }
 
-export type TaskType = 'create' | 'fix';
+export type TaskType = 'create' | 'fix' | 'correction';
 
 export type AccountName = 'さきAI' | 'たくむAIお兄さん' | 'れもん' | 'みさを' | 'みゆ' | 'さき' | 'ビジ系たくむ' | 'ぽよさや';
 
@@ -33,7 +33,6 @@ export interface TaskItem {
   qualityScore?: QualityScore;  // クオリティ評価（-/1〜5、5が最良、デフォルト-）
   revisionWorkload?: string;  // 修正工数（フリーワード）
   specialNotes?: string;  // 特記事項（フリーワード）
-  correctionCount?: number;  // 添削回数
 }
 
 export interface TaskReport {
@@ -60,9 +59,10 @@ export interface TaskReportInput {
 
 export interface AnalyticsData {
   totalHours: number;
+  createHours: number;
+  fixHours: number;
+  correctionHours: number;
   averageQuality: number;
-  totalFixes: number;
-  totalCorrections: number;
   taskCount: number;
 }
 
