@@ -111,6 +111,11 @@ export const AnalyticsDashboard: React.FC = () => {
           </View>
 
           <View style={styles.summaryCard}>
+            <Text style={styles.summaryValue}>{summary.totalCorrections}</Text>
+            <Text style={styles.summaryLabel}>総添削回数</Text>
+          </View>
+
+          <View style={styles.summaryCard}>
             <Text style={styles.summaryValue}>{summary.taskCount}</Text>
             <Text style={styles.summaryLabel}>タスク数</Text>
           </View>
@@ -169,6 +174,10 @@ export const AnalyticsDashboard: React.FC = () => {
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>修正回数:</Text>
               <Text style={styles.detailValue}>{task.totalFixes}回</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>添削回数:</Text>
+              <Text style={styles.detailValue}>{task.totalCorrections}回</Text>
             </View>
           </View>
         ))}

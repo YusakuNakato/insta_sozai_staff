@@ -82,6 +82,9 @@ export const TaskReportList: React.FC = () => {
                 </Text>
               </View>
               <Text style={styles.taskDuration}>{task.durationHrs}時間</Text>
+              {task.correctionCount !== undefined && task.correctionCount > 0 && (
+                <Text style={styles.taskCorrection}>添削: {task.correctionCount}回</Text>
+              )}
             </View>
           </View>
         ))}
@@ -234,6 +237,11 @@ const styles = StyleSheet.create({
   taskDuration: {
     fontSize: 13,
     color: '#666',
+    fontWeight: '500',
+  },
+  taskCorrection: {
+    fontSize: 13,
+    color: '#FF9500',
     fontWeight: '500',
   },
   learningsSection: {

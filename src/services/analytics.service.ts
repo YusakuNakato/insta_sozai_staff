@@ -5,6 +5,7 @@ type MetricAccumulator = {
   qualitySum: number;
   qualityCount: number;
   totalFixes: number;
+  totalCorrections: number;
   taskCount: number;
 };
 
@@ -25,17 +26,22 @@ const aggregateTaskMetrics = (tasks: TaskItem[]): MetricAccumulator => {
         acc.totalFixes += 1;
       }
 
+      if (typeof task.correctionCount === 'number') {
+        acc.totalCorrections += task.correctionCount;
+      }
+
       acc.taskCount += 1;
       return acc;
     },
-    { totalHours: 0, qualitySum: 0, qualityCount: 0, totalFixes: 0, taskCount: 0 }
+    { totalHours: 0, qualitySum: 0, qualityCount: 0, totalFixes: 0, totalCorrections: 0, taskCount: 0 }
   );
 };
 
-const toAnalyticsData = ({ totalHours, qualitySum, qualityCount, totalFixes, taskCount }: MetricAccumulator) => ({
+const toAnalyticsData = ({ totalHours, qualitySum, qualityCount, totalFixes, totalCorrections, taskCount }: MetricAccumulator) => ({
   totalHours: round1Decimal(totalHours),
   averageQuality: qualityCount > 0 ? round1Decimal(qualitySum / qualityCount) : 0,
   totalFixes,
+  totalCorrections,
   taskCount,
 });
 
@@ -86,6 +92,7 @@ export const calculateSummary = (reports: TaskReport[]) => {
       totalHours: 0,
       averageQuality: 0,
       totalFixes: 0,
+      totalCorrections: 0,
       taskCount: 0,
     };
   }

@@ -33,6 +33,7 @@ export interface TaskItem {
   qualityScore?: QualityScore;  // クオリティ評価（-/1〜5、5が最良、デフォルト-）
   revisionWorkload?: string;  // 修正工数（フリーワード）
   specialNotes?: string;  // 特記事項（フリーワード）
+  correctionCount?: number;  // 添削回数
 }
 
 export interface TaskReport {
@@ -61,6 +62,7 @@ export interface AnalyticsData {
   totalHours: number;
   averageQuality: number;
   totalFixes: number;
+  totalCorrections: number;
   taskCount: number;
 }
 
