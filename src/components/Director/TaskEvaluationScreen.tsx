@@ -30,6 +30,7 @@ export const TaskEvaluationScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [scores, setScores] = useState<{[key: string]: QualityScore}>({});
   const [workloads, setWorkloads] = useState<{[key: string]: string}>({});
+  const [corrections, setCorrections] = useState<{[key: string]: string}>({});
   const [notes, setNotes] = useState<{[key: string]: string}>({});
 
   useEffect(() => {
@@ -63,15 +64,18 @@ export const TaskEvaluationScreen: React.FC = () => {
       // 初期値を設定
       const initialScores: {[key: string]: QualityScore} = {};
       const initialWorkloads: {[key: string]: string} = {};
+      const initialCorrections: {[key: string]: string} = {};
       const initialNotes: {[key: string]: string} = {};
       allTasks.forEach(taskContext => {
         const key = `${taskContext.reportId}-${taskContext.taskIndex}`;
         initialScores[key] = taskContext.task.qualityScore || '-';
         initialWorkloads[key] = taskContext.task.revisionWorkload || '';
+        initialCorrections[key] = taskContext.task.correctionCount?.toString() || '';
         initialNotes[key] = taskContext.task.specialNotes || '';
       });
       setScores(initialScores);
       setWorkloads(initialWorkloads);
+      setCorrections(initialCorrections);
       setNotes(initialNotes);
     } catch (error: any) {
       console.error('タスク読み込みエラー:', error.message);
@@ -96,6 +100,10 @@ export const TaskEvaluationScreen: React.FC = () => {
     setWorkloads(prev => ({ ...prev, [key]: workload }));
   };
 
+  const handleCorrectionChange = (key: string, correction: string) => {
+    setCorrections(prev => ({ ...prev, [key]: correction }));
+  };
+
   const handleNotesChange = (key: string, note: string) => {
     setNotes(prev => ({ ...prev, [key]: note }));
   };
@@ -104,6 +112,7 @@ export const TaskEvaluationScreen: React.FC = () => {
     const key = `${taskContext.reportId}-${taskContext.taskIndex}`;
     const score = scores[key];
     const workload = workloads[key];
+    const correction = corrections[key];
     const specialNote = notes[key];
 
     // TODO: タスク評価を保存する処理を実装
@@ -119,6 +128,7 @@ export const TaskEvaluationScreen: React.FC = () => {
             ...t.task,
             qualityScore: score,
             revisionWorkload: workload,
+            correctionCount: correction ? parseInt(correction) : undefined,
             specialNotes: specialNote,
           }
         };
@@ -166,6 +176,7 @@ export const TaskEvaluationScreen: React.FC = () => {
           const key = `${taskContext.reportId}-${taskContext.taskIndex}`;
           const currentScore = scores[key] || '-';
           const currentWorkload = workloads[key] || '';
+          const currentCorrection = corrections[key] || '';
           const currentNotes = notes[key] || '';
 
           return (
@@ -188,7 +199,7 @@ export const TaskEvaluationScreen: React.FC = () => {
 
                 {/* 右側：評価フォーム */}
                 <View style={styles.evaluationSection}>
-                  {/* クオリティと修正工数を横並び */}
+                  {/* クオリティと修正工数と添削を横並び */}
                   <View style={styles.evaluationRow}>
                     <View style={styles.qualityField}>
                       <Text style={styles.label}>クオリティ</Text>
@@ -215,6 +226,17 @@ export const TaskEvaluationScreen: React.FC = () => {
                         placeholder="工数"
                         value={currentWorkload}
                         onChangeText={(text) => handleWorkloadChange(key, text)}
+                      />
+                    </View>
+
+                    <View style={styles.correctionField}>
+                      <Text style={styles.label}>添削</Text>
+                      <TextInput
+                        style={styles.correctionInputSmall}
+                        placeholder="回数"
+                        value={currentCorrection}
+                        onChangeText={(text) => handleCorrectionChange(key, text)}
+                        keyboardType="number-pad"
                       />
                     </View>
                   </View>
@@ -353,6 +375,10 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 6,
   },
+  correctionField: {
+    flex: 0.8,
+    gap: 6,
+  },
   evaluationField: {
     gap: 6,
   },
@@ -380,6 +406,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#DDD',
     height: 40,
+  },
+  correctionInputSmall: {
+    backgroundColor: '#F9F9F9',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 6,
+    fontSize: 14,
+    borderWidth: 1,
+    borderColor: '#DDD',
+    height: 40,
+    textAlign: 'center',
   },
   notesInput: {
     backgroundColor: '#F9F9F9',
